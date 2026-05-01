@@ -229,6 +229,11 @@
                 🔄 ล้างข้อมูลทั้งหมด
             </button>
         </div>
+        <div style="padding: 20px; border-top: 1px solid #eee; margin-top: auto;">
+            <button onclick="openDonateModal()" style="width: 100%; padding: 12px; background: #FFF4E5; color: #D97706; border: 2px dashed #FDE68A; border-radius: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                ☕ สนับสนุนค่ากาแฟ
+            </button>
+        </div>
     </div>
 
     <div class="modal" id="edit-name-modal" style="z-index: 4000;">
@@ -305,6 +310,19 @@
         </div>
     </div>
 
+    <div class="modal" id="donate-modal" style="z-index: 5000;">
+        <div class="modal-content" style="max-width: 320px; text-align: center;">
+            <h2 style="margin-top: 0; color: #D97706;">☕ สนับสนุนค่ากาแฟ!</h2>
+            <p style="color: #666; font-size: 14px; line-height: 1.5; margin-bottom: 20px;">
+                ถ้าแอปนี้ช่วยให้แก๊งคุณหารค่าซูชิง่ายขึ้น<br>สามารถสนับสนุนค่าน้ำค่าไฟได้ตามศรัทธาเลยครับ 💖
+            </p>
+            
+            <img src="./qrcode.png" alt="PromptPay QR Code" style="width: 100%; max-width: 220px; border-radius: 15px; border: 1px solid #eee; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+            
+            <button class="btn-cancel" onclick="closeDonateModal()" style="width: 100%;">ปิดหน้าต่าง</button>
+        </div>
+    </div>
+
     <script>
         // --- ระบบ Custom UI ---
         let currentConfirmAction = null;
@@ -315,6 +333,19 @@
         function showConfirm(msg, callback, title = "ยืนยัน") { document.getElementById('confirm-title').innerText = title; document.getElementById('confirm-message').innerText = msg; currentConfirmAction = callback; openModalUI('custom-confirm'); }
         function closeConfirm() { closeModalUI('custom-confirm'); currentConfirmAction = null; }
         function executeConfirm() { if (currentConfirmAction) currentConfirmAction(); closeConfirm(); }
+
+        // --- ระบบสนับสนุนค่ากาแฟ ---
+        function openDonateModal() {
+            // ปิด Sidebar ก่อน แล้วค่อยเปิดหน้าต่าง QR Code
+            const sidebar = document.getElementById('sidebar');
+            if(sidebar.classList.contains('open')) toggleSidebar();
+            
+            openModalUI('donate-modal');
+        }
+
+        function closeDonateModal() {
+            closeModalUI('donate-modal');
+        }
 
         // --- ข้อมูลจาน ---
         const katsuData = [
