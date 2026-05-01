@@ -183,7 +183,13 @@
         <div class="header-top">
             <button class="menu-btn" onclick="toggleSidebar()">☰</button>
             <h1 id="app-title">🍣 Kaiten Tally</h1>
-            <div class="spacer"></div>
+            <button class="menu-btn" id="sound-toggle-btn" onclick="toggleSound()" style="display: flex; align-items: center; justify-content: center;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                </svg>
+            </button>
         </div>
         <div class="tab-container">
             <button class="tab-btn active" id="tab-katsu" onclick="switchTab('katsu')">Katsu Midori</button>
@@ -324,6 +330,27 @@
     </div>
 
     <script>
+
+        // ตัวแปรเก็บสถานะเสียง (เริ่มต้นเป็นเปิด)
+        // --- ระบบเปิด/ปิดเสียง (ดีไซน์มินิมอล) ---
+        let isSoundEnabled = true;
+
+        // ไอคอนตอนเปิดเสียง (ลำโพงมีคลื่น)
+        const iconSoundOn = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`;
+        
+        // ไอคอนตอนปิดเสียง (ลำโพงมีกากบาท)
+        const iconSoundOff = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
+
+        function toggleSound() {
+            isSoundEnabled = !isSoundEnabled;
+            const btn = document.getElementById('sound-toggle-btn');
+            
+            // สลับไอคอน SVG
+            btn.innerHTML = isSoundEnabled ? iconSoundOn : iconSoundOff;
+            
+            // เปลี่ยนสีให้ดูจางลงเวลาปิดเสียง (เสริมความมินิมอล)
+            btn.style.color = isSoundEnabled ? "var(--text-main)" : "#999";
+        }
         // --- ระบบ Custom UI ---
         let currentConfirmAction = null;
         function openModalUI(id) { const el = document.getElementById(id); el.style.display = 'flex'; setTimeout(() => el.classList.add('show'), 10); }
@@ -648,14 +675,15 @@
             counts[currentShop][currentPerson][id] += 1; 
             document.getElementById('count-' + id).innerText = counts[currentShop][currentPerson][id]; 
             
-            // สั่นสำหรับ Android
             if (navigator.vibrate) navigator.vibrate(40); 
             
-            // เล่นเสียง
-            const sound = document.getElementById('click-sound');
-            if (sound) {
-                sound.currentTime = 0; // รีเซ็ตเสียงให้เริ่มใหม่ทันทีเผื่อกดรัวๆ
-                sound.play().catch(err => {}); // เล่นเสียง (ใส่ catch ไว้กันเบราว์เซอร์บล็อก)
+            // เช็คว่าผู้ใช้เปิดเสียงในแอปไว้หรือไม่
+            if (isSoundEnabled) {
+                const sound = document.getElementById('click-sound');
+                if (sound) {
+                    sound.currentTime = 0;
+                    sound.play().catch(err => {});
+                }
             }
         }
 
@@ -664,16 +692,21 @@
                 counts[currentShop][currentPerson][id] -= 1; 
                 document.getElementById('count-' + id).innerText = counts[currentShop][currentPerson][id]; 
                 
+                // สั่นสำหรับ Android (ตอนลบจะสั่นสั้นกว่าตอนบวกนิดนึง)
                 if (navigator.vibrate) navigator.vibrate(20); 
                 
-                // เล่นเสียง
-                const sound = document.getElementById('click-sound');
-                if (sound) {
-                    sound.currentTime = 0;
-                    sound.play().catch(err => {});
+                // เช็คว่าผู้ใช้เปิดเสียงในแอปไว้หรือไม่
+                if (isSoundEnabled) {
+                    const sound = document.getElementById('click-sound');
+                    if (sound) {
+                        sound.currentTime = 0;
+                        sound.play().catch(err => {});
+                    }
                 }
             } 
         }
+
+        
         
     </script>
     <audio id="click-sound" src="./click.mp3" preload="auto"></audio>
