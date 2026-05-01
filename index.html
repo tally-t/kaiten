@@ -356,31 +356,7 @@
             updateSoundUI();
         }
 
-        // --- 1. โหลดข้อมูลเดิมจากเครื่อง (ถ้ามี) ---
-        let savedCounts = localStorage.getItem('kaiten_counts');
-        let counts = savedCounts ? JSON.parse(savedCounts) : {
-            "Katsu Midori": {},
-            "Sushiro": {}
-        };
-
-        let savedShop = localStorage.getItem('kaiten_active_shop');
-        let currentShop = savedShop || "Katsu Midori";
-
-        // ฟังก์ชันช่วยเซฟข้อมูลลงเครื่องทุกครั้งที่มีการเปลี่ยนแปลง
-        function saveToLocal() {
-            localStorage.setItem('kaiten_counts', JSON.stringify(counts));
-            localStorage.setItem('kaiten_active_shop', currentShop);
-        }
-
-        // --- 2. แก้ไขฟังก์ชันสลับร้านให้จำค่าไว้ด้วย ---
-        function switchShop(shopName) {
-            currentShop = shopName;
-            saveToLocal(); // จำว่าล่าสุดเปิดร้านไหน
-            
-            // ส่วนที่เหลือคือโค้ดเดิมของคุณ (การเปลี่ยนสีปุ่ม tab และการวาดจานใหม่)
-            renderPlates(); 
-            updateTabUI(); // ฟังก์ชันไฮไลท์ปุ่ม tab ที่เลือก
-        }
+        
 
         // 4. สั่งให้อัปเดตหน้าตาปุ่มตั้งแต่ตอนเปิดแอปครั้งแรก
         updateSoundUI();
@@ -706,24 +682,38 @@
 
         
 
-        // --- 3. แก้ไขฟังก์ชัน add/remove ให้เซฟข้อมูลทุกครั้งที่กด ---
         function addPlate(id) { 
             counts[currentShop][currentPerson][id] += 1; 
             document.getElementById('count-' + id).innerText = counts[currentShop][currentPerson][id]; 
-            if (navigator.vibrate) navigator.vibrate(40);
-            if (isSoundEnabled) playSound();
             
-            saveToLocal(); // <--- เพิ่มบรรทัดนี้เพื่อเซฟทันที
+            if (navigator.vibrate) navigator.vibrate(40); 
+            
+            // เช็คว่าผู้ใช้เปิดเสียงในแอปไว้หรือไม่
+            if (isSoundEnabled) {
+                const sound = document.getElementById('click-sound');
+                if (sound) {
+                    sound.currentTime = 0;
+                    sound.play().catch(err => {});
+                }
+            }
         }
 
         function removePlate(id) { 
             if (counts[currentShop][currentPerson][id] > 0) { 
                 counts[currentShop][currentPerson][id] -= 1; 
                 document.getElementById('count-' + id).innerText = counts[currentShop][currentPerson][id]; 
-                if (navigator.vibrate) navigator.vibrate(20);
-                if (isSoundEnabled) playSound();
                 
-                saveToLocal(); // <--- เพิ่มบรรทัดนี้เพื่อเซฟทันที
+                // สั่นสำหรับ Android (ตอนลบจะสั่นสั้นกว่าตอนบวกนิดนึง)
+                if (navigator.vibrate) navigator.vibrate(20); 
+                
+                // เช็คว่าผู้ใช้เปิดเสียงในแอปไว้หรือไม่
+                if (isSoundEnabled) {
+                    const sound = document.getElementById('click-sound');
+                    if (sound) {
+                        sound.currentTime = 0;
+                        sound.play().catch(err => {});
+                    }
+                }
             } 
         }
 
@@ -750,18 +740,7 @@
             }
         };
 
-        function confirmClearData() {
-            showConfirm("ต้องการล้างจำนวนจานของทุกคนในร้านนี้ใช่หรือไม่?", () => {
-                // ล้างค่าเฉพาะร้านปัจจุบันให้เป็น 0 ทั้งหมด
-                for (let person in counts[currentShop]) {
-                    for (let plateId in counts[currentShop][person]) {
-                        counts[currentShop][person][plateId] = 0;
-                    }
-                }
-                saveToLocal(); // เซฟทับข้อมูลที่ล้างแล้ว
-                renderPlates(); // วาดหน้าจอใหม่
-            }, "ล้างข้อมูลจาน");
-        }
+        
 
         
         
