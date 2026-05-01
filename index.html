@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kaiten Tally</title>
+
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#e60012">
+    <link rel="apple-touch-icon" href="./icon.png">
+
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-X7X2BTZC3E"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+    
+      gtag('config', 'G-X7X2BTZC3E');
+    </script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* --- ตั้งค่าพื้นฐาน --- */
+        :root {
+            --bg-color: #f4f6f8;
+            --text-main: #333;
+            --brand-color: #e60012;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color); color: var(--text-main);
+            margin: 0; padding: 0; padding-bottom: 100px; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        /* --- Header และ Tabs ร้าน --- */
+        header {
+            background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            position: sticky; top: 0; z-index: 10;
+        }
+
+        .header-top {
+            display: flex; align-items: center; justify-content: space-between; padding: 15px 20px 5px;
+        }
+
+        .menu-btn { font-size: 24px; background: none; border: none; color: var(--text-main); cursor: pointer; padding: 0; }
+        header h1 { margin: 0; font-size: 20px; color: var(--brand-color); font-weight: 800; transition: color 0.3s; text-align: center; flex: 1; }
+        .spacer { width: 24px; } 
+
+        .tab-container { display: flex; padding: 10px 15px 5px; gap: 10px; }
+        .tab-btn {
+            flex: 1; padding: 10px; border-radius: 10px; text-align: center; font-weight: bold;
+            font-size: 14px; cursor: pointer; background: #f0f0f0; color: #888; transition: all 0.2s; border: none;
+        }
+        .tab-btn.active { background: var(--brand-color); color: white; box-shadow: 0 4px 10px rgba(230, 0, 18, 0.3); }
+
+        /* --- ระบบเพื่อน --- */
+        .friends-section {
+            background-color: white; padding: 10px 15px 15px;
+            border-bottom: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.03); margin-bottom: 10px;
+        }
+        .friends-scroll {
+            display: flex; overflow-x: auto; gap: 10px; padding-bottom: 5px; scrollbar-width: none; -ms-overflow-style: none;
+        }
+        .friends-scroll::-webkit-scrollbar { display: none; }
+        .friend-pill {
+            display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 16px;
+            background: #f8f9fa; border: 2px solid #ddd; border-radius: 20px;
+            font-size: 14px; font-weight: bold; color: #555; white-space: nowrap; cursor: pointer; transition: all 0.2s;
+        }
+        .friend-pill.active { background: white; border-color: var(--brand-color); color: var(--brand-color); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .delete-friend-btn {
+            background: rgba(0,0,0,0.1); color: #555; border-radius: 50%;
+            width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
+            font-size: 10px; border: none; cursor: pointer;
+        }
+        .friend-pill.active .delete-friend-btn { background: rgba(230, 0, 18, 0.1); color: var(--brand-color); }
+        .add-friend-box { display: flex; gap: 8px; margin-top: 10px; }
+        .add-friend-box input { flex: 1; padding: 10px 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; outline: none; }
+        .add-friend-box input:focus { border-color: var(--brand-color); }
+        .add-friend-box button { background: #333; color: white; border: none; border-radius: 10px; padding: 0 15px; font-weight: bold; cursor: pointer; }
+
+        /* --- ตารางจาน --- */
+        #plate-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 5px 15px 15px; }
+        .plate-card { background: white; border-radius: 18px; padding: 15px 5px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+        .plate-btn {
+            width: 70px; height: 70px; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; font-weight: 900; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border: 3px solid white;
+            background-size: cover; background-position: center; cursor: pointer; transition: transform 0.1s;
+        }
+        .plate-btn:active { transform: scale(0.9); }
+        .plate-btn span { position: relative; z-index: 1; text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+        .plate-btn.dark-text span { color: #333; text-shadow: 0 1px 2px rgba(255,255,255,0.7); }
+        .price-tag { font-size: 12px; color: #666; margin-bottom: 8px; font-weight: 600; }
+        .counter-control { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .count-display { font-size: 20px; font-weight: bold; color: var(--brand-color); min-width: 25px; }
+        .minus-btn {
+            width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid #ddd;
+            background: white; color: #888; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold;
+        }
+        .minus-btn:active { background: #f0f0f0; transform: scale(0.9); }
+
+        /* --- ปุ่มลอย --- */
+        .floating-btn {
+            position: fixed; bottom: 20px; left: 20px; right: 20px;
+            background-color: var(--brand-color); color: white; border: none;
+            border-radius: 15px; padding: 18px; font-size: 18px; font-weight: bold;
+            box-shadow: 0 8px 20px rgba(230, 0, 18, 0.4); cursor: pointer; z-index: 100; transition: background-color 0.3s;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1050; display: none; opacity: 0; transition: opacity 0.3s; }
+        .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: white; z-index: 1100; transition: left 0.3s ease; box-shadow: 2px 0 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { margin: 0; font-size: 18px; color: #333; }
+        .close-sidebar-btn { background: none; border: none; font-size: 24px; color: #888; cursor: pointer; }
+        
+        /* ส่วนโปรไฟล์ผู้ใช้ใน Sidebar */
+        .sidebar-profile { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #fafafa; }
+        .sidebar-profile-info span { font-size: 12px; color: #888; }
+        .sidebar-profile-info h3 { margin: 2px 0 0 0; color: var(--brand-color); font-size: 16px; }
+        .edit-name-btn { background: #eee; border: none; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; color: #333; transition: background 0.2s; }
+        .edit-name-btn:active { background: #ddd; }
+
+        .sidebar-save-section { padding: 20px; background: #f8f9fa; border-bottom: 1px solid #eee; }
+        .sidebar-save-section input { width: calc(100% - 20px); padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; font-size: 14px; outline: none;}
+        .sidebar-save-section input:focus { border-color: var(--brand-color); }
+        .sidebar-save-section button { width: 100%; padding: 10px; background: #333; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .sidebar-list { padding: 20px; flex: 1; overflow-y: auto; }
+        .group-item { background: white; border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .group-info h4 { margin: 0 0 5px 0; color: var(--brand-color); }
+        .group-info p { margin: 0; font-size: 12px; color: #777; line-height: 1.4; }
+        .group-actions { display: flex; gap: 8px; flex-direction: column; }
+        .load-group-btn { background: #333; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+        .del-group-btn { background: #fee; color: #e60012; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+
+        /* --- Modals --- */
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
+        .modal.show { opacity: 1; }
+        .modal-content { background: white; width: 90%; max-width: 450px; max-height: 90vh; border-radius: 20px; padding: 20px; overflow-y: auto; transform: scale(0.95); transition: transform 0.2s; display: flex; flex-direction: column; }
+        .modal.show .modal-content { transform: scale(1); }
+
+        .payer-selection { background: #f0f4f8; padding: 15px; border-radius: 15px; margin-bottom: 15px; text-align: center; border: 1px solid #d9e2ec; }
+        .payer-selection label { display: block; font-size: 14px; color: #486581; margin-bottom: 8px; font-weight: bold; }
+        .payer-selection select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #bcccdc; font-size: 16px; outline: none; font-weight: bold; color: #102a43; }
+
+        .receipt-box { background: white; padding: 20px; border-radius: 12px; border: 2px dashed #ccc; margin-bottom: 15px; position: relative; }
+        .receipt-header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        .receipt-shop { font-size: 22px; font-weight: 900; color: #333; margin-bottom: 10px; }
+        .transfer-badge { display: inline-block; background: #e6f6ec; color: #15803d; border: 2px solid #22c55e; padding: 8px 15px; border-radius: 30px; font-size: 16px; font-weight: bold; }
+        .transfer-name { color: #166534; font-size: 18px; text-decoration: underline; }
+
+        .person-bill { background: #f8f9fa; border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid #eee; }
+        .person-bill h3 { margin: 0 0 8px 0; color: #333; font-size: 16px; }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px; color: #666; }
+        .person-total-row { display: flex; justify-content: space-between; margin-top: 8px; font-size: 15px; font-weight: bold; color: var(--brand-color); border-top: 1px dashed #ddd; padding-top: 8px; }
+        
+        .grand-total-box { background: #111; color: white; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: center; }
+        .grand-total-box p { margin: 0 0 5px 0; font-size: 12px; color: #aaa; }
+        .grand-total-row { display: flex; justify-content: space-between; font-size: 22px; font-weight: bold; color: #fff; }
+
+        .action-buttons { display: flex; gap: 10px; margin-bottom: 10px; }
+        .btn-save { flex: 2; background: #0ea5e9; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3); }
+        .close-btn { flex: 1; background: #eee; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .reset-btn { background: transparent; color: #777; border: none; padding: 10px; font-size: 14px; width: 100%; text-decoration: underline; cursor: pointer; }
+
+        .confirm-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-cancel { flex: 1; background: #eee; color: #333; border: none; padding: 12px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-confirm { flex: 1; background: var(--brand-color); color: white; border: none; padding: 12px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-ok { width: 100%; background: var(--brand-color); color: white; border: none; padding: 12px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        
+        .welcome-input { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; margin-bottom: 20px; outline: none; text-align: center; }
+        .welcome-input:focus { border-color: var(--brand-color); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-top">
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+            <h1 id="app-title">🍣 Kaiten Tally</h1>
+            <div class="spacer"></div>
+        </div>
+        <div class="tab-container">
+            <button class="tab-btn active" id="tab-katsu" onclick="switchTab('katsu')">Katsu Midori</button>
+            <button class="tab-btn" id="tab-sushiro" onclick="switchTab('sushiro')">Sushiro</button>
+        </div>
+        
+        <div class="friends-section">
+            <div class="friends-scroll" id="friends-list"></div>
+            <div class="add-friend-box">
+                <input type="text" id="new-friend-name" placeholder="พิมพ์ชื่อเพื่อนที่นี่...">
+                <button onclick="addFriend()">+ เพิ่ม</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="plate-grid"></main>
+
+    <button class="floating-btn" id="btn-checkout" onclick="showBill()">🧾 สรุปบิลและเซฟรูป</button>
+
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>🍣 Kaiten Tally</h2>
+            <button class="close-sidebar-btn" onclick="toggleSidebar()">✕</button>
+        </div>
+        
+        <div class="sidebar-profile">
+            <div class="sidebar-profile-info">
+                <span>ชื่อของคุณในบิล:</span>
+                <h3 id="display-my-name">ฉัน</h3>
+            </div>
+            <button class="edit-name-btn" onclick="openEditNameModal()">✏️ เปลี่ยนชื่อ</button>
+        </div>
+
+        <div class="sidebar-save-section">
+            <p style="margin: 0 0 8px 0; font-size: 12px; color: #666;">บันทึกรายชื่อโต๊ะปัจจุบันเก็บไว้เรียกใช้</p>
+            <input type="text" id="save-group-name" placeholder="ตั้งชื่อกลุ่ม (เช่น แก๊งออฟฟิศ)">
+            <button onclick="saveCurrentGroup()">💾 บันทึกกลุ่มนี้</button>
+        </div>
+        <div class="sidebar-list" id="saved-groups-list"></div>
+        <div style="padding: 20px; border-top: 1px solid #eee;">
+            <button onclick="factoryReset()" style="width: 100%; padding: 12px; background: #fee; color: #e60012; border: 1px solid #fcc; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                🔄 ล้างข้อมูลทั้งหมด
+            </button>
+        </div>
+    </div>
+
+    <div class="modal" id="edit-name-modal" style="z-index: 4000;">
+        <div class="modal-content" style="max-width: 320px; text-align: center;">
+            <h2 style="margin-top: 0; color: var(--brand-color);">✏️ เปลี่ยนชื่อของคุณ</h2>
+            <p style="color: #666; margin-bottom: 20px; line-height: 1.4; font-size: 14px;">ชื่อนี้จะแสดงเป็นชื่อของคุณเวลากดเพิ่มจานและสรุปบิลครับ</p>
+            <input type="text" id="edit-name-input" class="welcome-input" placeholder="พิมพ์ชื่อใหม่ (เช่น ไอติม)">
+            <div class="confirm-actions" style="margin-top: 0;">
+                <button class="btn-cancel" onclick="closeModalUI('edit-name-modal')">ยกเลิก</button>
+                <button class="btn-confirm" onclick="saveEditedName()">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="welcome-modal" style="z-index: 4000;">
+        <div class="modal-content" style="max-width: 320px; text-align: center;">
+            <h2 style="margin-top: 0; color: var(--brand-color);">👋 ยินดีต้อนรับ!</h2>
+            <p style="color: #666; margin-bottom: 20px; line-height: 1.4;">แอปนี้จะช่วยคุณคำนวณและหารค่าซูชิสายพาน ก่อนเริ่มใช้งาน ขอทราบชื่อของคุณหน่อยครับ</p>
+            <input type="text" id="my-name-input" class="welcome-input" placeholder="พิมพ์ชื่อของคุณ (เช่น ไอติม)">
+            <button class="btn-ok" onclick="saveMyName()" style="margin-top: 0;">เริ่มใช้งานเลย 🚀</button>
+        </div>
+    </div>
+
+    <div class="modal" id="bill-modal">
+        <div class="modal-content">
+            <div class="payer-selection">
+                <label>ใครเป็นคนจ่ายเงินบิลนี้ไปก่อน?</label>
+                <select id="payer-select" onchange="updatePayerName()"></select>
+            </div>
+
+            <div id="receipt-capture-area" class="receipt-box">
+                <div class="receipt-header">
+                    <div class="receipt-shop" id="receipt-shop-name">Katsu Midori</div>
+                    <div class="transfer-badge">
+                        🏦 โอนเงินคืนให้: <span class="transfer-name" id="receipt-payer-name">-</span>
+                    </div>
+                </div>
+                
+                <div id="bill-details"></div>
+                
+                <div class="grand-total-box">
+                    <p>ยอดรวมทั้งโต๊ะ (อาหาร + SC)</p>
+                    <div class="grand-total-row">
+                        <span>Total:</span>
+                        <span><span id="grand-total">0</span> ฿</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="close-btn" onclick="closeBill()">ปิด</button>
+                <button class="btn-save" id="btn-save-img" onclick="saveAsImage()">📸 เซฟรูปบิล</button>
+            </div>
+            <button class="reset-btn" onclick="promptReset()">ล้างจำนวนจานเป็น 0 เริ่มใหม่</button>
+        </div>
+    </div>
+
+    <div class="modal" id="custom-alert" style="z-index: 3000;">
+        <div class="modal-content" style="max-width: 300px; text-align: center;">
+            <h2 id="alert-title" style="margin-top: 0; color: var(--brand-color);">แจ้งเตือน</h2>
+            <p id="alert-message" style="color: #666; line-height: 1.5; margin-bottom: 0;"></p>
+            <button class="btn-ok" onclick="closeAlert()">ตกลง</button>
+        </div>
+    </div>
+
+    <div class="modal" id="custom-confirm" style="z-index: 3000;">
+        <div class="modal-content" style="max-width: 300px; text-align: center;">
+            <h2 id="confirm-title" style="margin-top: 0; color: var(--brand-color);">ยืนยัน</h2>
+            <p id="confirm-message" style="color: #666; line-height: 1.5; margin-bottom: 0;"></p>
+            <div class="confirm-actions">
+                <button class="btn-cancel" onclick="closeConfirm()">ยกเลิก</button>
+                <button class="btn-confirm" onclick="executeConfirm()">ตกลง</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- ระบบ Custom UI ---
+        let currentConfirmAction = null;
+        function openModalUI(id) { const el = document.getElementById(id); el.style.display = 'flex'; setTimeout(() => el.classList.add('show'), 10); }
+        function closeModalUI(id) { const el = document.getElementById(id); el.classList.remove('show'); setTimeout(() => el.style.display = 'none', 200); }
+        function showAlert(msg, title = "แจ้งเตือน") { document.getElementById('alert-title').innerText = title; document.getElementById('alert-message').innerText = msg; openModalUI('custom-alert'); }
+        function closeAlert() { closeModalUI('custom-alert'); }
+        function showConfirm(msg, callback, title = "ยืนยัน") { document.getElementById('confirm-title').innerText = title; document.getElementById('confirm-message').innerText = msg; currentConfirmAction = callback; openModalUI('custom-confirm'); }
+        function closeConfirm() { closeModalUI('custom-confirm'); currentConfirmAction = null; }
+        function executeConfirm() { if (currentConfirmAction) currentConfirmAction(); closeConfirm(); }
+
+        // --- ข้อมูลจาน ---
+        const katsuData = [
+            { id: 'p40', price: 40, name: 'แดง', color: '#e60012', textColor: 'white' },
+            { id: 'p50', price: 50, name: 'ฟ้าอมเขียว', color: '#00838f', textColor: 'white' },
+            { id: 'p60', price: 60, name: 'เขียว', color: '#2e7d32', textColor: 'white' },
+            { id: 'p70', price: 70, name: 'เหลือง', color: '#ffc242', textColor: 'white' },
+            { id: 'p80', price: 80, name: 'น้ำตาล', color: '#8d6e63', textColor: 'white' },
+            { id: 'p90', price: 90, name: 'ชมพูลาย', color: '#f8bbd0', textColor: '#333', darkText: true, pattern: 'background-image: radial-gradient(rgba(255,255,255,0.7) 15%, transparent 16%); background-size: 8px 8px; background-color: #f8bbd0;' },
+            { id: 'p100', price: 100, name: 'ทองหกเหลี่ยม', color: '#d7cfa7', textColor: '#333', darkText: true, pattern: 'background-image: repeating-linear-gradient(30deg, rgba(139,136,87,0.05) 0px, rgba(139,136,87,0.05) 1px, transparent 1px, transparent 10px), repeating-linear-gradient(90deg, rgba(139,136,87,0.05) 0px, rgba(139,136,87,0.05) 1px, transparent 1px, transparent 10px); background-color: #d7cfa7;' },
+            { id: 'p120', price: 120, name: 'ขาวขอบทอง', color: '#ffffff', textColor: '#333', darkText: true, border: 'border: 3px solid #dfb74c;', pattern: 'background-image: radial-gradient(circle at 100% 150%, rgba(223,183,76,0.1) 24%, white 25%, white 28%, rgba(223,183,76,0.1) 29%, rgba(223,183,76,0.1) 36%, white 36%, white 40%, transparent 40%, transparent); background-size: 15px 10px; background-color: #ffffff;' },
+            { id: 'p140', price: 140, name: 'แดงลายพัด', color: '#bd151b', textColor: 'white', border: 'border: 3px solid #dfb74c;', pattern: 'background-image: radial-gradient(circle at 100% 150%, rgba(223,183,76,0.2) 24%, white 25%, white 28%, rgba(223,183,76,0.2) 29%, rgba(223,183,76,0.2) 36%, white 36%, white 40%, transparent 40%, transparent); background-size: 15px 10px; background-color: #bd151b;' },
+            { id: 'p150', price: 150, name: 'ทองเรียบ', color: '#dfb74c', textColor: '#333', darkText: true },
+            { id: 'p160', price: 160, name: 'กรมท่าลายจุด', color: '#2b5768', textColor: 'white', border: 'border: 3px dashed #aebfbe;', pattern: 'background-image: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px), radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 10px 10px; background-position: 0 0, 5px 5px; background-color: #2b5768;' },
+            { id: 'p180', price: 180, name: 'กรมท่าตาราง', color: '#1f2e4d', textColor: 'white', border: 'border: 3px solid white;', pattern: 'background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 2px, transparent 2px, transparent 6px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 2px, transparent 2px, transparent 6px); background-color: #1f2e4d;' }
+        ];
+        const sushiroData = [
+            { id: 's30', price: 30, name: 'จานขาว', color: '#ffffff', textColor: '#333', darkText: true, border: 'border: 3px solid #ddd;' },
+            { id: 's40', price: 40, name: 'จานแดง', color: '#e60012', textColor: 'white' },
+            { id: 's60', price: 60, name: 'จานเงิน', color: '#e0e0e0', textColor: '#333', darkText: true, border: 'border: 3px solid #aaa;' },
+            { id: 's80', price: 80, name: 'จานทอง', color: '#d4af37', textColor: '#333', darkText: true, border: 'border: 3px solid #bfa02c;' },
+            { id: 's100', price: 100, name: 'จานดำ', color: '#1a1a1a', textColor: 'white', border: 'border: 3px solid #444;' }
+        ];
+
+        // --- ระบบโปรไฟล์ผู้ใช้ ---
+        let currentShop = 'katsu'; 
+        let savedUsername = localStorage.getItem('kaiten_username');
+        
+        let people = [{ id: 'p_me', name: savedUsername || 'ฉัน' }]; 
+        let currentPerson = people[0].id;
+        let counts = { katsu: {}, sushiro: {} };
+        
+        function initPersonData(personId) {
+            if(!counts.katsu[personId]) counts.katsu[personId] = {};
+            if(!counts.sushiro[personId]) counts.sushiro[personId] = {};
+            katsuData.forEach(plate => { if(counts.katsu[personId][plate.id] === undefined) counts.katsu[personId][plate.id] = 0; });
+            sushiroData.forEach(plate => { if(counts.sushiro[personId][plate.id] === undefined) counts.sushiro[personId][plate.id] = 0; });
+        }
+
+        function updateSidebarNameDisplay() {
+            let name = localStorage.getItem('kaiten_username') || 'ฉัน';
+            document.getElementById('display-my-name').innerText = name;
+        }
+
+        function saveMyName() {
+            const inputName = document.getElementById('my-name-input').value.trim();
+            if(inputName === '') { showAlert("กรุณาพิมพ์ชื่อของคุณก่อนนะครับ", "ลืมใส่ชื่อ!"); return; }
+            localStorage.setItem('kaiten_username', inputName);
+            people[0].name = inputName; 
+            updateSidebarNameDisplay();
+            renderFriends();
+            closeModalUI('welcome-modal');
+        }
+
+        function openEditNameModal() {
+            const currentName = localStorage.getItem('kaiten_username') || '';
+            document.getElementById('edit-name-input').value = currentName;
+            openModalUI('edit-name-modal');
+        }
+
+        function saveEditedName() {
+            const newName = document.getElementById('edit-name-input').value.trim();
+            if(!newName) { showAlert("กรุณาพิมพ์ชื่อก่อนบันทึกครับ"); return; }
+            
+            localStorage.setItem('kaiten_username', newName);
+            
+            // หาว่าคนไหนคือตัวเรา แล้วแก้ชื่อคนนั้น
+            const meIndex = people.findIndex(p => p.id === 'p_me');
+            if(meIndex !== -1) {
+                people[meIndex].name = newName;
+            } else {
+                people[0].name = newName; // กรณีที่โหลดจากกลุ่มแล้วไม่มี id p_me ให้แก้คนแรกสุด
+            }
+            
+            updateSidebarNameDisplay();
+            renderFriends();
+            closeModalUI('edit-name-modal');
+            showAlert("เปลี่ยนชื่อเรียบร้อยแล้วครับ!", "สำเร็จ");
+        }
+
+        // --- ระบบจัดการเพื่อน ---
+        function addFriend() {
+            const input = document.getElementById('new-friend-name');
+            const name = input.value.trim();
+            if(name === '') return; 
+            const newId = 'p_' + Date.now();
+            people.push({ id: newId, name: name });
+            initPersonData(newId); input.value = ''; selectPerson(newId); 
+        }
+
+        function removeFriend(id, name, event) {
+            event.stopPropagation();
+            if(people.length === 1) { showAlert("ต้องมีคนอยู่ในกลุ่มอย่างน้อย 1 คนครับ!"); return; }
+            showConfirm(`ต้องการลบ "${name}" ออกจากกลุ่มใช่หรือไม่?`, () => {
+                people = people.filter(p => p.id !== id);
+                if(currentPerson === id) currentPerson = people[0].id; 
+                renderFriends(); renderGrid();
+            });
+        }
+
+        function selectPerson(id) { currentPerson = id; renderFriends(); renderGrid(); }
+
+        function renderFriends() {
+            const container = document.getElementById('friends-list'); container.innerHTML = '';
+            people.forEach(person => {
+                const isActive = person.id === currentPerson ? 'active' : '';
+                container.innerHTML += `<div class="friend-pill ${isActive}" onclick="selectPerson('${person.id}')">👤 ${person.name} <button class="delete-friend-btn" onclick="removeFriend('${person.id}', '${person.name}', event)">✕</button></div>`;
+            });
+            container.scrollLeft = container.scrollWidth;
+        }
+
+        // --- ระบบ Sidebar ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar'); const overlay = document.getElementById('sidebar-overlay');
+            if(sidebar.classList.contains('open')) { sidebar.classList.remove('open'); overlay.style.opacity = '0'; setTimeout(() => overlay.style.display = 'none', 300); } 
+            else { overlay.style.display = 'block'; setTimeout(() => { overlay.style.opacity = '1'; sidebar.classList.add('open'); }, 10); renderSavedGroups(); }
+        }
+
+        function saveCurrentGroup() {
+            const input = document.getElementById('save-group-name'); const groupName = input.value.trim();
+            if(!groupName) { showAlert("กรุณาพิมพ์ชื่อกลุ่มก่อนบันทึกครับ"); return; }
+            let savedGroups = JSON.parse(localStorage.getItem('kaiten_groups') || '{}');
+            savedGroups[groupName] = people.map(p => ({ id: p.id, name: p.name }));
+            localStorage.setItem('kaiten_groups', JSON.stringify(savedGroups));
+            input.value = ''; renderSavedGroups(); showAlert(`บันทึกกลุ่ม "${groupName}" เรียบร้อยแล้ว!`, "สำเร็จ");
+        }
+
+        function renderSavedGroups() {
+            const list = document.getElementById('saved-groups-list');
+            let savedGroups = JSON.parse(localStorage.getItem('kaiten_groups') || '{}');
+            list.innerHTML = ''; const groupNames = Object.keys(savedGroups);
+            if(groupNames.length === 0) { list.innerHTML = '<p style="color:#888; text-align:center;">ไม่มีกลุ่มที่บันทึกไว้</p>'; return; }
+            groupNames.forEach(name => {
+                const peopleNames = savedGroups[name].map(p => p.name).join(', ');
+                list.innerHTML += `<div class="group-item"><div class="group-info"><h4>${name}</h4><p>${peopleNames}</p></div><div class="group-actions"><button class="load-group-btn" onclick="loadGroup('${name}')">เรียกใช้</button><button class="del-group-btn" onclick="deleteGroup('${name}')">ลบ</button></div></div>`;
+            });
+        }
+
+        function loadGroup(name) {
+            showConfirm(`เรียกใช้กลุ่ม "${name}" ใช่ไหม?\nจานที่กำลังนับอยู่จะถูกล้างใหม่ทั้งหมด!`, () => {
+                let savedGroups = JSON.parse(localStorage.getItem('kaiten_groups') || '{}');
+                people = savedGroups[name]; currentPerson = people[0].id;
+                counts = { katsu: {}, sushiro: {} }; people.forEach(p => initPersonData(p.id));
+                renderFriends(); renderGrid(); toggleSidebar();
+            });
+        }
+        function deleteGroup(name) { showConfirm(`ลบกลุ่ม "${name}" ทิ้งใช่ไหม?`, () => { let savedGroups = JSON.parse(localStorage.getItem('kaiten_groups') || '{}'); delete savedGroups[name]; localStorage.setItem('kaiten_groups', JSON.stringify(savedGroups)); renderSavedGroups(); }); }
+
+        // --- ระบบวาดจาน ---
+        function switchTab(shop) {
+            currentShop = shop; document.getElementById('tab-katsu').classList.remove('active'); document.getElementById('tab-sushiro').classList.remove('active');
+            document.getElementById('tab-' + shop).classList.add('active'); document.documentElement.style.setProperty('--brand-color', shop === 'katsu' ? '#e60012' : '#cc0000'); renderGrid();
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('plate-grid'); grid.innerHTML = ''; 
+            const activeData = currentShop === 'katsu' ? katsuData : sushiroData;
+            activeData.forEach(plate => {
+                const borderStyle = plate.border ? plate.border : ''; const backgroundStyle = plate.pattern ? plate.pattern : `background-color: ${plate.color};`; const textClass = plate.darkText ? 'dark-text' : '';
+                grid.innerHTML += `<div class="plate-card"><div class="plate-btn ${textClass}" onclick="addPlate('${plate.id}')" style="${backgroundStyle} color: ${plate.textColor}; ${borderStyle}"><span>${plate.price}</span></div><div class="price-tag">${plate.name}</div><div class="counter-control"><div class="minus-btn" onclick="removePlate('${plate.id}')">−</div ><div class="count-display" id="count-${plate.id}">${counts[currentShop][currentPerson][plate.id]}</div><div style="width: 28px;"></div></div></div>`;
+            });
+        }
+
+        function addPlate(id) { counts[currentShop][currentPerson][id] += 1; document.getElementById('count-' + id).innerText = counts[currentShop][currentPerson][id]; if (navigator.vibrate) navigator.vibrate(40); }
+        function removePlate(id) { if (counts[currentShop][currentPerson][id] > 0) { counts[currentShop][currentPerson][id] -= 1; document.getElementById('count-' + id).innerText = counts[currentShop][currentPerson][id]; if (navigator.vibrate) navigator.vibrate(20); } }
+
+        // --- ระบบบิล & เซฟรูป ---
+        function showBill() {
+            let tableGrandTotal = 0; let detailsHTML = ''; const activeData = currentShop === 'katsu' ? katsuData : sushiroData;
+
+            const select = document.getElementById('payer-select');
+            select.innerHTML = '';
+            people.forEach(p => { select.innerHTML += `<option value="${p.id}">${p.name}</option>`; });
+            
+            document.getElementById('receipt-shop-name').innerText = currentShop === 'katsu' ? '🍣 Katsu Midori' : '🍣 Sushiro';
+
+            people.forEach(person => {
+                let personFoodTotal = 0; let personPlatesHTML = '';
+                activeData.forEach(plate => {
+                    let qty = counts[currentShop][person.id][plate.id];
+                    if (qty > 0) {
+                        let sumPrice = qty * plate.price; personFoodTotal += sumPrice;
+                        personPlatesHTML += `<div class="summary-row"><span>- ${plate.name} x ${qty}</span><span>${sumPrice.toLocaleString('th-TH')} ฿</span></div>`;
+                    }
+                });
+
+                if (personFoodTotal > 0) {
+                    let personSC = personFoodTotal * 0.10; let personGrand = personFoodTotal + personSC;
+                    tableGrandTotal += personGrand;
+                    detailsHTML += `<div class="person-bill"><h3>👤 ${person.name}</h3>${personPlatesHTML}<div class="summary-row" style="margin-top: 8px; border-top: 1px dotted #ccc; padding-top: 8px;"><span>ค่าอาหาร:</span><span>${personFoodTotal.toLocaleString('th-TH')} ฿</span></div><div class="summary-row"><span>Service Charge 10%:</span><span>${personSC.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ฿</span></div><div class="person-total-row"><span>ยอดโอน:</span><span>${personGrand.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ฿</span></div></div>`;
+                }
+            });
+
+            if (detailsHTML === '') detailsHTML = '<p style="text-align: center; color: #888; margin-top: 20px;">ยังไม่ได้เพิ่มจานของใครเลยครับ</p>';
+            
+            document.getElementById('bill-details').innerHTML = detailsHTML;
+            document.getElementById('grand-total').innerText = tableGrandTotal.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            updatePayerName();
+            openModalUI('bill-modal');
+        }
+
+        function updatePayerName() {
+            const select = document.getElementById('payer-select');
+            if(select.options.length > 0) {
+                const payerName = select.options[select.selectedIndex].text;
+                document.getElementById('receipt-payer-name').innerText = payerName;
+            }
+        }
+
+        function closeBill() { closeModalUI('bill-modal'); }
+
+        function promptReset() {
+            showConfirm("ยืนยันการเคลียร์จำนวนจานทั้งหมดกลับเป็น 0 ใช่หรือไม่?", () => {
+                const activeData = currentShop === 'katsu' ? katsuData : sushiroData;
+                people.forEach(person => { activeData.forEach(plate => counts[currentShop][person.id][plate.id] = 0); });
+                renderGrid(); closeBill();
+            }, "เริ่มนับใหม่");
+        }
+
+        function saveAsImage() {
+            const receiptBox = document.getElementById('receipt-capture-area');
+            const btnSave = document.getElementById('btn-save-img');
+            
+            const originalText = btnSave.innerText;
+            btnSave.innerText = 'กำลังเตรียมรูป... ⏳';
+            btnSave.style.opacity = '0.7';
+
+            const originalBoxShadow = receiptBox.style.boxShadow;
+            receiptBox.style.boxShadow = 'none';
+            receiptBox.style.backgroundColor = '#ffffff';
+
+            html2canvas(receiptBox, { 
+                scale: 2, 
+                useCORS: true, 
+                backgroundColor: '#ffffff'
+            }).then(canvas => {
+                receiptBox.style.boxShadow = originalBoxShadow;
+                btnSave.innerText = originalText;
+                btnSave.style.opacity = '1';
+
+                // แปลงรูปเป็นไฟล์เพื่อเตรียมแชร์
+                canvas.toBlob(function(blob) {
+                    const fileName = `Bill_${currentShop}_${new Date().getTime()}.png`;
+                    const file = new File([blob], fileName, { type: 'image/png' });
+                    
+                    // ตรวจสอบว่ามือถือเครื่องนี้รองรับระบบ Share Sheet ไหม (iOS และ Android ส่วนใหญ่รองรับ)
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        navigator.share({
+                            files: [file],
+                            title: 'สรุปบิลซูชิ',
+                            text: 'ยอดโอนค่าซูชิมาแล้วจ้า 🍣💸 โอนตามนี้ได้เลยย'
+                        }).catch(err => {
+                            console.log("ยกเลิกการแชร์", err); // ถ้าผู้ใช้กดยกเลิกเมนูแชร์ ไม่ต้องทำอะไร
+                        });
+                    } else {
+                        // ถ้าเปิดในคอมพิวเตอร์ หรือเบราว์เซอร์เก่า ให้ใช้วิธีดาวน์โหลดลงเครื่องแบบเดิม
+                        const link = document.createElement('a');
+                        link.download = fileName;
+                        link.href = URL.createObjectURL(blob);
+                        link.click();
+                        showAlert("ดาวน์โหลดรูปสำเร็จ! (เนื่องจากเบราว์เซอร์ไม่รองรับการแชร์โดยตรง รูปจึงอยู่ในโฟลเดอร์ดาวน์โหลด)", "สำเร็จ!");
+                    }
+                }, 'image/png');
+
+            }).catch(err => {
+                receiptBox.style.boxShadow = originalBoxShadow;
+                btnSave.innerText = originalText;
+                btnSave.style.opacity = '1';
+                showAlert("เกิดข้อผิดพลาดในการสร้างรูปครับ ลองใหม่อีกครั้ง", "ผิดพลาด");
+            });
+        }
+
+        // เริ่มต้นการทำงาน 
+        initPersonData(currentPerson);
+        renderFriends(); 
+        renderGrid();
+        updateSidebarNameDisplay();
+        
+        if (!savedUsername) {
+            openModalUI('welcome-modal');
+        }
+
+        document.getElementById('new-friend-name').addEventListener('keypress', function(e) { if(e.key === 'Enter') addFriend(); });
+        document.getElementById('my-name-input').addEventListener('keypress', function(e) { if(e.key === 'Enter') saveMyName(); });
+        document.getElementById('edit-name-input').addEventListener('keypress', function(e) { if(e.key === 'Enter') saveEditedName(); });
+    
+
+        function factoryReset() {
+            showConfirm("ต้องการล้างประวัติทั้งหมด (รวมถึงชื่อของคุณและกลุ่มเพื่อน) เพื่อกลับไปเหมือนเพิ่งเปิดแอปครั้งแรกใช่หรือไม่?", () => {
+                // ล้างข้อมูลในเครื่องทั้งหมด
+                localStorage.removeItem('kaiten_username');
+                localStorage.removeItem('kaiten_groups');
+                // รีเฟรชหน้าเว็บใหม่
+                window.location.reload();
+            }, "รีเซ็ตแอปพลิเคชัน");
+        }
+    </script>
+</body>
+</html>
