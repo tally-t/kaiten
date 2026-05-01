@@ -239,7 +239,7 @@
     <div class="modal" id="edit-name-modal" style="z-index: 4000;">
         <div class="modal-content" style="max-width: 320px; text-align: center;">
             <h2 style="margin-top: 0; color: var(--brand-color);">✏️ เปลี่ยนชื่อของคุณ</h2>
-            <p style="color: #666; margin-bottom: 20px; line-height: 1.4; font-size: 14px;">ชื่อนี้จะแสดงเป็นชื่อของคุณเวลากดเพิ่มจานและสรุปบิลครับ</p>
+            <p style="color: #666; margin-bottom: 20px; line-height: 1.4; font-size: 14px;">ชื่อนี้จะแสดงเป็นชื่อของคุณเวลากดเพิ่มจานและสรุปบิลค่ะ</p>
             <input type="text" id="edit-name-input" class="welcome-input" placeholder="พิมพ์ชื่อใหม่ (เช่น ไอติม)">
             <div class="confirm-actions" style="margin-top: 0;">
                 <button class="btn-cancel" onclick="closeModalUI('edit-name-modal')">ยกเลิก</button>
@@ -251,7 +251,7 @@
     <div class="modal" id="welcome-modal" style="z-index: 4000;">
         <div class="modal-content" style="max-width: 320px; text-align: center;">
             <h2 style="margin-top: 0; color: var(--brand-color);">👋 ยินดีต้อนรับ!</h2>
-            <p style="color: #666; margin-bottom: 20px; line-height: 1.4;">แอปนี้จะช่วยคุณคำนวณและหารค่าซูชิสายพาน ก่อนเริ่มใช้งาน ขอทราบชื่อของคุณหน่อยครับ</p>
+            <p style="color: #666; margin-bottom: 20px; line-height: 1.4;">แอปนี้จะช่วยคุณคำนวณและหารค่าซูชิสายพาน ก่อนเริ่มใช้งาน ขอทราบชื่อของคุณหน่อยค่ะ</p>
             <input type="text" id="my-name-input" class="welcome-input" placeholder="พิมพ์ชื่อของคุณ (เช่น ไอติม)">
             <button class="btn-ok" onclick="saveMyName()" style="margin-top: 0;">เริ่มใช้งานเลย 🚀</button>
         </div>
@@ -314,7 +314,7 @@
         <div class="modal-content" style="max-width: 320px; text-align: center;">
             <h2 style="margin-top: 0; color: #D97706;">☕ สนับสนุนค่ากาแฟ!</h2>
             <p style="color: #666; font-size: 14px; line-height: 1.5; margin-bottom: 20px;">
-                ถ้าแอปนี้ช่วยให้แก๊งคุณหารค่าซูชิง่ายขึ้น<br>สามารถสนับสนุนค่าน้ำค่าไฟได้ตามศรัทธาเลยครับ 💖
+                ถ้าแอปนี้ช่วยให้แก๊งคุณหารค่าซูชิง่ายขึ้น<br>สามารถสนับสนุนค่ากาแฟได้ตามศรัทธาเลยค่ะ 💖
             </p>
             
             <img src="./qrcode.jpg" alt="PromptPay QR Code" style="display: block; margin: 0 auto 20px auto; width: 100%; max-width: 220px; border-radius: 15px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
@@ -392,7 +392,7 @@
 
         function saveMyName() {
             const inputName = document.getElementById('my-name-input').value.trim();
-            if(inputName === '') { showAlert("กรุณาพิมพ์ชื่อของคุณก่อนนะครับ", "ลืมใส่ชื่อ!"); return; }
+            if(inputName === '') { showAlert("กรุณาพิมพ์ชื่อของคุณก่อนนะคะ", "ลืมใส่ชื่อ!"); return; }
             localStorage.setItem('kaiten_username', inputName);
             people[0].name = inputName; 
             updateSidebarNameDisplay();
@@ -408,7 +408,7 @@
 
         function saveEditedName() {
             const newName = document.getElementById('edit-name-input').value.trim();
-            if(!newName) { showAlert("กรุณาพิมพ์ชื่อก่อนบันทึกครับ"); return; }
+            if(!newName) { showAlert("กรุณาพิมพ์ชื่อก่อนบันทึกค่ะ"); return; }
             
             localStorage.setItem('kaiten_username', newName);
             
@@ -423,7 +423,7 @@
             updateSidebarNameDisplay();
             renderFriends();
             closeModalUI('edit-name-modal');
-            showAlert("เปลี่ยนชื่อเรียบร้อยแล้วครับ!", "สำเร็จ");
+            showAlert("เปลี่ยนชื่อเรียบร้อยแล้วค่ะ!", "สำเร็จ");
         }
 
         // --- ระบบจัดการเพื่อน ---
@@ -438,7 +438,7 @@
 
         function removeFriend(id, name, event) {
             event.stopPropagation();
-            if(people.length === 1) { showAlert("ต้องมีคนอยู่ในกลุ่มอย่างน้อย 1 คนครับ!"); return; }
+            if(people.length === 1) { showAlert("ต้องมีคนอยู่ในกลุ่มอย่างน้อย 1 คนค่ะ!"); return; }
             showConfirm(`ต้องการลบ "${name}" ออกจากกลุ่มใช่หรือไม่?`, () => {
                 people = people.filter(p => p.id !== id);
                 if(currentPerson === id) currentPerson = people[0].id; 
@@ -466,7 +466,7 @@
 
         function saveCurrentGroup() {
             const input = document.getElementById('save-group-name'); const groupName = input.value.trim();
-            if(!groupName) { showAlert("กรุณาพิมพ์ชื่อกลุ่มก่อนบันทึกครับ"); return; }
+            if(!groupName) { showAlert("กรุณาพิมพ์ชื่อกลุ่มก่อนบันทึกค่ะ"); return; }
             let savedGroups = JSON.parse(localStorage.getItem('kaiten_groups') || '{}');
             savedGroups[groupName] = people.map(p => ({ id: p.id, name: p.name }));
             localStorage.setItem('kaiten_groups', JSON.stringify(savedGroups));
@@ -539,7 +539,7 @@
                 }
             });
 
-            if (detailsHTML === '') detailsHTML = '<p style="text-align: center; color: #888; margin-top: 20px;">ยังไม่ได้เพิ่มจานของใครเลยครับ</p>';
+            if (detailsHTML === '') detailsHTML = '<p style="text-align: center; color: #888; margin-top: 20px;">ยังไม่ได้เพิ่มจานของใครเลยค่ะ</p>';
             
             document.getElementById('bill-details').innerHTML = detailsHTML;
             document.getElementById('grand-total').innerText = tableGrandTotal.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -615,7 +615,7 @@
                 receiptBox.style.boxShadow = originalBoxShadow;
                 btnSave.innerText = originalText;
                 btnSave.style.opacity = '1';
-                showAlert("เกิดข้อผิดพลาดในการสร้างรูปครับ ลองใหม่อีกครั้ง", "ผิดพลาด");
+                showAlert("เกิดข้อผิดพลาดในการสร้างรูปค่ะ ลองใหม่อีกครั้ง", "ผิดพลาด");
             });
         }
 
