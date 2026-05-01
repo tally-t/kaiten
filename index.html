@@ -713,6 +713,29 @@
             } 
         }
 
+        // บล็อกการคลิกขวา (Right Click)
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // บล็อกปุ่ม F12 และคีย์ลัด Inspect ต่างๆ
+        document.onkeydown = function(e) {
+            // บล็อก F12
+            if (e.keyCode == 123) {
+                return false;
+            }
+            // บล็อก Ctrl+Shift+I (Windows) หรือ Cmd+Option+I (Mac)
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
+                return false;
+            }
+            // บล็อก Ctrl+Shift+J (Windows) หรือ Cmd+Option+J (Mac)
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
+                return false;
+            }
+            // บล็อก Ctrl+U (View Source)
+            if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
+                return false;
+            }
+        };
+
         
         
     </script>
