@@ -643,6 +643,36 @@
                 window.location.reload();
             }, "รีเซ็ตแอปพลิเคชัน");
         }
+        function addPlate(id) { 
+            counts[currentShop][currentPerson][id] += 1; 
+            document.getElementById('count-' + id).innerText = counts[currentShop][currentPerson][id]; 
+            
+            // สั่นสำหรับ Android
+            if (navigator.vibrate) navigator.vibrate(40); 
+            
+            // เล่นเสียง
+            const sound = document.getElementById('click-sound');
+            if (sound) {
+                sound.currentTime = 0; // รีเซ็ตเสียงให้เริ่มใหม่ทันทีเผื่อกดรัวๆ
+                sound.play().catch(err => {}); // เล่นเสียง (ใส่ catch ไว้กันเบราว์เซอร์บล็อก)
+            }
+        }
+        function removePlate(id) { 
+            if (counts[currentShop][currentPerson][id] > 0) { 
+                counts[currentShop][currentPerson][id] -= 1; 
+                document.getElementById('count-' + id).innerText = counts[currentShop][currentPerson][id]; 
+                
+                if (navigator.vibrate) navigator.vibrate(20); 
+                
+                // เล่นเสียง
+                const sound = document.getElementById('click-sound');
+                if (sound) {
+                    sound.currentTime = 0;
+                    sound.play().catch(err => {});
+                }
+            } 
+        }
     </script>
+    <audio id="click-sound" src="./click.mp3" preload="auto"></audio>
 </body>
 </html>
