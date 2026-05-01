@@ -331,26 +331,33 @@
 
     <script>
 
-        // ตัวแปรเก็บสถานะเสียง (เริ่มต้นเป็นเปิด)
-        // --- ระบบเปิด/ปิดเสียง (ดีไซน์มินิมอล) ---
-        let isSoundEnabled = true;
+        // --- ระบบเปิด/ปิดเสียง (ดีไซน์มินิมอล + จำค่าได้) ---
+        // 1. โหลดค่าเดิมจากเครื่อง (ถ้าไม่เคยตั้งค่ามาก่อน ให้เริ่มต้นที่ true คือเปิดเสียง)
+        let savedSound = localStorage.getItem('kaiten_sound');
+        let isSoundEnabled = savedSound === null ? true : (savedSound === 'true');
 
-        // ไอคอนตอนเปิดเสียง (ลำโพงมีคลื่น)
         const iconSoundOn = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`;
-        
-        // ไอคอนตอนปิดเสียง (ลำโพงมีกากบาท)
         const iconSoundOff = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
 
+        // 2. ฟังก์ชันอัปเดตหน้าตาปุ่ม
+        function updateSoundUI() {
+            const btn = document.getElementById('sound-toggle-btn');
+            if (btn) {
+                btn.innerHTML = isSoundEnabled ? iconSoundOn : iconSoundOff;
+                btn.style.color = isSoundEnabled ? "var(--text-main)" : "#999";
+            }
+        }
+
+        // 3. ฟังก์ชันตอนกดปุ่ม
         function toggleSound() {
             isSoundEnabled = !isSoundEnabled;
-            const btn = document.getElementById('sound-toggle-btn');
-            
-            // สลับไอคอน SVG
-            btn.innerHTML = isSoundEnabled ? iconSoundOn : iconSoundOff;
-            
-            // เปลี่ยนสีให้ดูจางลงเวลาปิดเสียง (เสริมความมินิมอล)
-            btn.style.color = isSoundEnabled ? "var(--text-main)" : "#999";
+            // เซฟค่าล่าสุดลงเครื่องทันที
+            localStorage.setItem('kaiten_sound', isSoundEnabled); 
+            updateSoundUI();
         }
+
+        // 4. สั่งให้อัปเดตหน้าตาปุ่มตั้งแต่ตอนเปิดแอปครั้งแรก
+        updateSoundUI();
         // --- ระบบ Custom UI ---
         let currentConfirmAction = null;
         function openModalUI(id) { const el = document.getElementById(id); el.style.display = 'flex'; setTimeout(() => el.classList.add('show'), 10); }
