@@ -192,7 +192,7 @@
             </button>
         </div>
         <div class="tab-container">
-            <button class="tab-btn active" id="tab-katsu" onclick="switchTab('katsu')">Katsu Midori</button>
+            <button class="tab-btn" id="tab-katsu" onclick="switchTab('katsu')">Katsu Midori</button>
             <button class="tab-btn" id="tab-sushiro" onclick="switchTab('sushiro')">Sushiro</button>
         </div>
         
@@ -207,7 +207,20 @@
 
     <main id="plate-grid"></main>
 
-    <button class="floating-btn" id="btn-checkout" onclick="showBill()">🧾 สรุปบิลและเซฟรูป</button>
+    <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; display: flex; gap: 10px; z-index: 100;">
+        
+        <button onclick="confirmClearData()" style="background: white; border: none; border-radius: 15px; padding: 0 18px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+            </svg>
+        </button>
+        
+        <button class="floating-btn" id="btn-checkout" onclick="showBill()" style="position: relative; bottom: auto; left: auto; right: auto; flex: 1; margin: 0;">
+            🧾 สรุปบิลและเซฟรูป
+        </button>
+        
+    </div>
     
     <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div class="sidebar" id="sidebar">
@@ -407,12 +420,27 @@
         ];
 
         // --- ระบบโปรไฟล์ผู้ใช้ ---
-        let currentShop = 'katsu'; 
+        let savedShop = localStorage.getItem('kaiten_active_shop');
+        let currentShop = savedShop || 'katsu'; 
         let savedUsername = localStorage.getItem('kaiten_username');
         
-        let people = [{ id: 'p_me', name: savedUsername || 'ฉัน' }]; 
-        let currentPerson = people[0].id;
-        let counts = { katsu: {}, sushiro: {} };
+        // 1. เพิ่มการโหลดรายชื่อเพื่อนจากเครื่อง
+        let savedPeople = localStorage.getItem('kaiten_people');
+        let people = savedPeople ? JSON.parse(savedPeople) : [{ id: 'p_me', name: savedUsername || 'ฉัน' }]; 
+        
+        // 2. เพิ่มการจำว่าล่าสุดกำลังจิ้มจานให้ใครอยู่
+        let savedPerson = localStorage.getItem('kaiten_current_person');
+        let currentPerson = (savedPerson && people.find(p => p.id === savedPerson)) ? savedPerson : people[0].id;
+
+        let savedCounts = localStorage.getItem('kaiten_counts');
+        let counts = savedCounts ? JSON.parse(savedCounts) : { katsu: {}, sushiro: {} };
+
+        function saveToLocal() {
+            localStorage.setItem('kaiten_counts', JSON.stringify(counts));
+            localStorage.setItem('kaiten_active_shop', currentShop);
+            localStorage.setItem('kaiten_people', JSON.stringify(people)); // <--- สั่งให้จำรายชื่อเพื่อน
+            localStorage.setItem('kaiten_current_person', currentPerson);  // <--- สั่งให้จำว่ากำลังเลือกใครอยู่
+        }
         
         function initPersonData(personId) {
             if(!counts.katsu[personId]) counts.katsu[personId] = {};
@@ -448,20 +476,18 @@
             
             localStorage.setItem('kaiten_username', newName);
             
-            // หาว่าคนไหนคือตัวเรา แล้วแก้ชื่อคนนั้น
             const meIndex = people.findIndex(p => p.id === 'p_me');
-            if(meIndex !== -1) {
-                people[meIndex].name = newName;
-            } else {
-                people[0].name = newName; // กรณีที่โหลดจากกลุ่มแล้วไม่มี id p_me ให้แก้คนแรกสุด
-            }
+            if(meIndex !== -1) { people[meIndex].name = newName; } 
+            else { people[0].name = newName; }
             
             updateSidebarNameDisplay();
             renderFriends();
+            saveToLocal(); // <--- เพิ่มบรรทัดนี้
             closeModalUI('edit-name-modal');
             showAlert("เปลี่ยนชื่อเรียบร้อยแล้วค่ะ!", "สำเร็จ");
         }
 
+        // --- ระบบจัดการเพื่อน ---
         // --- ระบบจัดการเพื่อน ---
         function addFriend() {
             const input = document.getElementById('new-friend-name');
@@ -469,7 +495,10 @@
             if(name === '') return; 
             const newId = 'p_' + Date.now();
             people.push({ id: newId, name: name });
-            initPersonData(newId); input.value = ''; selectPerson(newId); 
+            initPersonData(newId); 
+            input.value = ''; 
+            selectPerson(newId); 
+            saveToLocal(); // <--- เซฟตอนเพิ่มเพื่อน
         }
 
         function removeFriend(id, name, event) {
@@ -478,11 +507,18 @@
             showConfirm(`ต้องการลบ "${name}" ออกจากกลุ่มใช่หรือไม่?`, () => {
                 people = people.filter(p => p.id !== id);
                 if(currentPerson === id) currentPerson = people[0].id; 
-                renderFriends(); renderGrid();
+                saveToLocal(); // <--- เซฟตอนลบเพื่อน
+                renderFriends(); 
+                renderGrid();
             });
         }
 
-        function selectPerson(id) { currentPerson = id; renderFriends(); renderGrid(); }
+        function selectPerson(id) { 
+            currentPerson = id; 
+            saveToLocal(); // <--- เซฟตอนเปลี่ยนคน
+            renderFriends(); 
+            renderGrid(); 
+        }
 
         function renderFriends() {
             const container = document.getElementById('friends-list'); container.innerHTML = '';
@@ -525,6 +561,7 @@
                 let savedGroups = JSON.parse(localStorage.getItem('kaiten_groups') || '{}');
                 people = savedGroups[name]; currentPerson = people[0].id;
                 counts = { katsu: {}, sushiro: {} }; people.forEach(p => initPersonData(p.id));
+                saveToLocal(); // <--- เพิ่มบรรทัดนี้
                 renderFriends(); renderGrid(); toggleSidebar();
             });
         }
@@ -532,7 +569,9 @@
 
         // --- ระบบวาดจาน ---
         function switchTab(shop) {
-            currentShop = shop; document.getElementById('tab-katsu').classList.remove('active'); document.getElementById('tab-sushiro').classList.remove('active');
+            currentShop = shop; 
+            saveToLocal(); // สั่งให้จำว่ากำลังเปิดร้านไหนอยู่
+            document.getElementById('tab-katsu').classList.remove('active'); document.getElementById('tab-sushiro').classList.remove('active');
             document.getElementById('tab-' + shop).classList.add('active'); document.documentElement.style.setProperty('--brand-color', shop === 'katsu' ? '#e60012' : '#cc0000'); renderGrid();
         }
 
@@ -658,7 +697,7 @@
         // เริ่มต้นการทำงาน 
         initPersonData(currentPerson);
         renderFriends(); 
-        renderGrid();
+        switchTab(currentShop);
         updateSidebarNameDisplay();
         
         if (!savedUsername) {
@@ -688,7 +727,6 @@
             
             if (navigator.vibrate) navigator.vibrate(40); 
             
-            // เช็คว่าผู้ใช้เปิดเสียงในแอปไว้หรือไม่
             if (isSoundEnabled) {
                 const sound = document.getElementById('click-sound');
                 if (sound) {
@@ -696,6 +734,7 @@
                     sound.play().catch(err => {});
                 }
             }
+            saveToLocal(); // <--- เพิ่มบรรทัดนี้
         }
 
         function removePlate(id) { 
@@ -703,10 +742,8 @@
                 counts[currentShop][currentPerson][id] -= 1; 
                 document.getElementById('count-' + id).innerText = counts[currentShop][currentPerson][id]; 
                 
-                // สั่นสำหรับ Android (ตอนลบจะสั่นสั้นกว่าตอนบวกนิดนึง)
                 if (navigator.vibrate) navigator.vibrate(20); 
                 
-                // เช็คว่าผู้ใช้เปิดเสียงในแอปไว้หรือไม่
                 if (isSoundEnabled) {
                     const sound = document.getElementById('click-sound');
                     if (sound) {
@@ -714,6 +751,7 @@
                         sound.play().catch(err => {});
                     }
                 }
+                saveToLocal(); // <--- เพิ่มบรรทัดนี้
             } 
         }
 
@@ -740,7 +778,20 @@
             }
         };
 
-        
+        function confirmClearData() {
+            showConfirm("ต้องการล้างจำนวนจานของทุกคนในร้านนี้ใช่หรือไม่?", () => {
+                for (let person in counts[currentShop]) {
+                    for (let plateId in counts[currentShop][person]) {
+                        counts[currentShop][person][plateId] = 0;
+                    }
+                }
+                saveToLocal(); 
+                const allCounters = document.querySelectorAll('[id^="count-"]');
+                allCounters.forEach(counter => {
+                    counter.innerText = "0";
+                });
+            }, "ล้างข้อมูลจาน");
+        }
 
         
         
