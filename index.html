@@ -21,6 +21,8 @@
     </script>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         /* --- ตั้งค่าพื้นฐาน --- */
         :root {
@@ -348,6 +350,25 @@
 
     <script>
 
+  
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA7ZvCkfrOmqxvx2YfsfPWmw1Y0l9pu3cs",
+            authDomain: "kaiten-tally.firebaseapp.com",
+            databaseURL: "https://kaiten-tally-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "kaiten-tally",
+            storageBucket: "kaiten-tally.firebasestorage.app",
+            messagingSenderId: "483725872116",
+            appId: "1:483725872116:web:fe15f7e9e56987a875c7a1"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
+
         // --- ระบบเปิด/ปิดเสียง (ดีไซน์มินิมอล + จำค่าได้) ---
         // 1. โหลดค่าเดิมจากเครื่อง (ถ้าไม่เคยตั้งค่ามาก่อน ให้เริ่มต้นที่ true คือเปิดเสียง)
         let savedSound = localStorage.getItem('kaiten_sound');
@@ -439,12 +460,42 @@
         let savedCounts = localStorage.getItem('kaiten_counts');
         let counts = savedCounts ? JSON.parse(savedCounts) : { katsu: {}, sushiro: {} };
 
+        // --- กำหนดห้องสำหรับปาร์ตี้ซูชิ (อนาคตทำระบบให้กรอกรหัสได้) ---
+        let roomId = "party_001"; 
+
         function saveToLocal() {
+            // 1. เซฟลงเครื่องเหมือนเดิม (กันเหนียวเผื่อเน็ตหลุด)
             localStorage.setItem('kaiten_counts', JSON.stringify(counts));
             localStorage.setItem('kaiten_active_shop', currentShop);
-            localStorage.setItem('kaiten_people', JSON.stringify(people)); // <--- สั่งให้จำรายชื่อเพื่อน
-            localStorage.setItem('kaiten_current_person', currentPerson);  // <--- สั่งให้จำว่ากำลังเลือกใครอยู่
+            localStorage.setItem('kaiten_people', JSON.stringify(people)); 
+            localStorage.setItem('kaiten_current_person', currentPerson);
+
+            // 2. ส่งข้อมูล 'จาน' และ 'เพื่อน' ขึ้น Firebase ทันที!
+            db.ref('rooms/' + roomId).set({
+                counts: counts,
+                people: people
+            });
         }
+
+        // --- ระบบดักฟังข้อมูล Real-time จาก Firebase ---
+        db.ref('rooms/' + roomId).on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                // 1. ถ้ามีข้อมูลบนอากาศ ให้ดึงมาทับข้อมูลในแอปเรา
+                if (data.counts) counts = data.counts;
+                if (data.people) {
+                    people = data.people;
+                    // เช็คกันเหนียว เผื่อเพื่อนโดนลบออกจากกลุ่มไปแล้ว
+                    if (!people.find(p => p.id === currentPerson)) {
+                        currentPerson = people[0].id; 
+                    }
+                }
+                
+                // 2. สั่งให้แอปวาดหน้าจอ "จาน" และ "เพื่อน" ใหม่ทันที
+                renderFriends();
+                renderGrid();
+            }
+        });
         
         function initPersonData(personId) {
             if(!counts.katsu[personId]) counts.katsu[personId] = {};
