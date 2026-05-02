@@ -21,8 +21,6 @@
     </script>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         /* --- ตั้งค่าพื้นฐาน --- */
         :root {
@@ -184,10 +182,7 @@
     <header>
         <div class="header-top">
             <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-            <div style="flex: 1; text-align: center;">
-                <h1 id="app-title" style="margin: 0;">🍣 Kaiten Tally</h1>
-                <div id="display-room-id" style="font-size: 12px; color: #888; margin-top: 2px;">รหัสโต๊ะ: -</div>
-            </div>
+            <h1 id="app-title">🍣 Kaiten Tally</h1>
             <button class="menu-btn" id="sound-toggle-btn" onclick="toggleSound()" style="display: flex; align-items: center; justify-content: center;">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
@@ -249,16 +244,12 @@
         </div>
         <div class="sidebar-list" id="saved-groups-list"></div>
         <div style="padding: 20px; border-top: 1px solid #eee;">
-            <button onclick="leaveRoom()" style="width: 100%; padding: 12px; background: #f0f4f8; color: #333; border: 1px solid #d9e2ec; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;">
-                🚪 ออกจากโต๊ะปัจจุบัน
-            </button>
-
             <button onclick="factoryReset()" style="width: 100%; padding: 12px; background: #fee; color: #e60012; border: 1px solid #fcc; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
                     <path d="M3 3v5h5"></path>
                 </svg>
-                ล้างแอปเริ่มต้นใหม่ทั้งหมด
+                ล้างข้อมูลทั้งหมด
             </button>
         </div>
         <div style="padding: 20px; border-top: 1px solid #eee; margin-top: auto;">
@@ -281,26 +272,11 @@
     </div>
 
     <div class="modal" id="welcome-modal" style="z-index: 4000;">
-        <div class="modal-content" style="max-width: 320px; text-align: center; padding: 25px 20px;">
+        <div class="modal-content" style="max-width: 320px; text-align: center;">
             <h2 style="margin-top: 0; color: var(--brand-color);">👋 ยินดีต้อนรับ!</h2>
+            <p style="color: #666; margin-bottom: 20px; line-height: 1.4;">แอปนี้จะช่วยคุณคำนวณและหารค่าซูชิสายพาน ก่อนเริ่มใช้งาน ขอทราบชื่อของคุณหน่อยค่ะ</p>
             <input type="text" id="my-name-input" class="welcome-input" placeholder="พิมพ์ชื่อของคุณ (เช่น ไอติม)">
-
-            <button class="btn-save" onclick="createNewRoom()" style="width: 100%; margin-bottom: 15px; padding: 12px; background: var(--brand-color); display: flex; align-items: center; justify-content: center; gap: 8px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-                สร้างโต๊ะใหม่
-            </button>
-
-            <div style="position: relative; margin: 20px 0; text-align: center;">
-                <div style="border-top: 1px solid #ddd; position: absolute; top: 50%; width: 100%; z-index: 1;"></div>
-                <span style="background: white; padding: 0 10px; color: #888; font-size: 12px; position: relative; z-index: 2;">หรือเข้าโต๊ะของเพื่อน</span>
-            </div>
-
-            <div style="display: flex; gap: 8px;">
-                <input type="text" id="room-id-input" class="welcome-input" placeholder="รหัส 4 หลัก" style="margin-bottom: 0; flex: 1; text-align: center; font-size: 18px; letter-spacing: 2px;">
-                <button class="btn-save" onclick="joinRoom()" style="background: #333; padding: 12px 15px; width: auto; font-size: 14px;">
-                    🤝 เข้าร่วม
-                </button>
-            </div>
+            <button class="btn-ok" onclick="saveMyName()" style="margin-top: 0;">เริ่มใช้งานเลย 🚀</button>
         </div>
     </div>
 
@@ -371,25 +347,6 @@
     </div>
 
     <script>
-
-  
-
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyA7ZvCkfrOmqxvx2YfsfPWmw1Y0l9pu3cs",
-            authDomain: "kaiten-tally.firebaseapp.com",
-            databaseURL: "https://kaiten-tally-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "kaiten-tally",
-            storageBucket: "kaiten-tally.firebasestorage.app",
-            messagingSenderId: "483725872116",
-            appId: "1:483725872116:web:fe15f7e9e56987a875c7a1"
-        };
-
-        // Initialize Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const db = firebase.database();
 
         // --- ระบบเปิด/ปิดเสียง (ดีไซน์มินิมอล + จำค่าได้) ---
         // 1. โหลดค่าเดิมจากเครื่อง (ถ้าไม่เคยตั้งค่ามาก่อน ให้เริ่มต้นที่ true คือเปิดเสียง)
@@ -471,46 +428,23 @@
         let currentShop = savedShop || 'katsu'; 
         let savedUsername = localStorage.getItem('kaiten_username');
         
-        // 1. สร้าง ID ประจำเครื่อง (ไม่ให้ซ้ำกัน)
-        let myUserId = localStorage.getItem('kaiten_my_user_id');
-        if (!myUserId) {
-            myUserId = 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-            localStorage.setItem('kaiten_my_user_id', myUserId);
-        }
-
+        // 1. เพิ่มการโหลดรายชื่อเพื่อนจากเครื่อง
         let savedPeople = localStorage.getItem('kaiten_people');
-        let people = savedPeople ? JSON.parse(savedPeople) : [{ id: myUserId, name: savedUsername || 'ฉัน' }]; 
+        let people = savedPeople ? JSON.parse(savedPeople) : [{ id: 'p_me', name: savedUsername || 'ฉัน' }]; 
         
+        // 2. เพิ่มการจำว่าล่าสุดกำลังจิ้มจานให้ใครอยู่
         let savedPerson = localStorage.getItem('kaiten_current_person');
-        let currentPerson = (savedPerson && people.find(p => p.id === savedPerson)) ? savedPerson : myUserId;
+        let currentPerson = (savedPerson && people.find(p => p.id === savedPerson)) ? savedPerson : people[0].id;
 
         let savedCounts = localStorage.getItem('kaiten_counts');
         let counts = savedCounts ? JSON.parse(savedCounts) : { katsu: {}, sushiro: {} };
 
-        let savedRoom = localStorage.getItem('kaiten_room_id');
-        let roomId = savedRoom || null;
-
-        
-
-        // --- ระบบดักฟังข้อมูล Real-time จาก Firebase ---
-        db.ref('rooms/' + roomId).on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                // 1. ถ้ามีข้อมูลบนอากาศ ให้ดึงมาทับข้อมูลในแอปเรา
-                if (data.counts) counts = data.counts;
-                if (data.people) {
-                    people = data.people;
-                    // เช็คกันเหนียว เผื่อเพื่อนโดนลบออกจากกลุ่มไปแล้ว
-                    if (!people.find(p => p.id === currentPerson)) {
-                        currentPerson = people[0].id; 
-                    }
-                }
-                
-                // 2. สั่งให้แอปวาดหน้าจอ "จาน" และ "เพื่อน" ใหม่ทันที
-                renderFriends();
-                renderGrid();
-            }
-        });
+        function saveToLocal() {
+            localStorage.setItem('kaiten_counts', JSON.stringify(counts));
+            localStorage.setItem('kaiten_active_shop', currentShop);
+            localStorage.setItem('kaiten_people', JSON.stringify(people)); // <--- สั่งให้จำรายชื่อเพื่อน
+            localStorage.setItem('kaiten_current_person', currentPerson);  // <--- สั่งให้จำว่ากำลังเลือกใครอยู่
+        }
         
         function initPersonData(personId) {
             if(!counts.katsu[personId]) counts.katsu[personId] = {};
@@ -524,109 +458,14 @@
             document.getElementById('display-my-name').innerText = name;
         }
 
-        function processWelcome(inputName, inputRoom, isNewRoom) {
+        function saveMyName() {
+            const inputName = document.getElementById('my-name-input').value.trim();
             if(inputName === '') { showAlert("กรุณาพิมพ์ชื่อของคุณก่อนนะคะ", "ลืมใส่ชื่อ!"); return; }
-
-            // เช็ครหัส
-            if(isNewRoom) {
-                inputRoom = Math.floor(1000 + Math.random() * 9000).toString(); // สุ่มเลขให้ใหม่
-            } else {
-                if(inputRoom === '' || inputRoom.length < 4) {
-                    showAlert("กรุณาใส่รหัสโต๊ะ 4 หลักจากเพื่อนให้ถูกต้องค่ะ", "รหัสไม่ครบ!"); return;
-                }
-            }
-
-            // บันทึกลงเครื่อง
             localStorage.setItem('kaiten_username', inputName);
-            localStorage.setItem('kaiten_room_id', inputRoom);
-
-            let me = people.find(p => p.id === myUserId);
-            if(me) { me.name = inputName; } else { people = [{ id: myUserId, name: inputName }]; }
-
-            roomId = inputRoom;
-            currentPerson = myUserId;
-            initPersonData(myUserId);
-
+            people[0].name = inputName; 
             updateSidebarNameDisplay();
             renderFriends();
             closeModalUI('welcome-modal');
-
-            startFirebaseListener();
-
-            // ถ้าสร้างโต๊ะใหม่ ให้เด้งป็อปอัปบอกรหัสเลย
-            if(isNewRoom) {
-                setTimeout(() => {
-                    showAlert(`ส่งรหัสโต๊ะให้เพื่อนได้เลย:\n\n⭐ [ ${inputRoom} ] ⭐`, "✨ สร้างโต๊ะสำเร็จ!");
-                }, 400);
-            }
-        }
-
-        function createNewRoom() {
-            const inputName = document.getElementById('my-name-input').value.trim();
-            processWelcome(inputName, null, true);
-        }
-
-        function joinRoom() {
-            const inputName = document.getElementById('my-name-input').value.trim();
-            const inputRoom = document.getElementById('room-id-input').value.trim();
-            processWelcome(inputName, inputRoom, false);
-        }
-
-        function saveToLocal() {
-            localStorage.setItem('kaiten_counts', JSON.stringify(counts));
-            localStorage.setItem('kaiten_active_shop', currentShop);
-            localStorage.setItem('kaiten_people', JSON.stringify(people)); 
-            localStorage.setItem('kaiten_current_person', currentPerson);
-
-            // ส่งข้อมูลขึ้นฟ้า
-            if(roomId) {
-                db.ref('rooms/' + roomId).set({
-                    counts: counts,
-                    people: people
-                });
-            }
-        }
-
-        function startFirebaseListener() {
-            if(!roomId) return;
-            document.getElementById('display-room-id').innerText = "รหัสโต๊ะ: " + roomId;
-            
-            db.ref('rooms/' + roomId).on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    let needsSync = false;
-                    
-                    if (data.counts) counts = data.counts;
-                    if (data.people) {
-                        people = data.people;
-                        
-                        // ✨ พระเอกอยู่ตรงนี้: เช็คว่ามี "ฉัน" อยู่ในโต๊ะนี้หรือยัง?
-                        const amIInRoom = people.find(p => p.id === myUserId);
-                        if (!amIInRoom) {
-                            // ถ้ายังไม่มี แสดงว่าฉันเพิ่งเข้าห้องมาใหม่! จับชื่อยัดลงกลุ่มเลย
-                            people.push({ id: myUserId, name: localStorage.getItem('kaiten_username') });
-                            initPersonData(myUserId);
-                            needsSync = true; // สั่งให้ส่งข้อมูลกลับไปบอกเพื่อนว่าฉันมาแล้ว
-                        }
-                        
-                        // เผื่อเพื่อนโดนลบออกจากโต๊ะ
-                        if (!people.find(p => p.id === currentPerson)) {
-                            currentPerson = people[0].id; 
-                        }
-                    }
-                    
-                    renderFriends();
-                    renderGrid();
-                    
-                    // ถ้าฉันเพิ่งเข้าโต๊ะ ให้ตะโกนบอก Firebase ทันที
-                    if(needsSync) {
-                        saveToLocal();
-                    }
-                } else {
-                    // ถ้าเข้าห้องมาแล้วห้องว่างเปล่า (ฉันคือคนตั้งโต๊ะคนแรก)
-                    saveToLocal();
-                }
-            });
         }
 
         function openEditNameModal() {
@@ -641,14 +480,13 @@
             
             localStorage.setItem('kaiten_username', newName);
             
-            // หาตัวเองให้เจอแล้วเปลี่ยนชื่อ
-            const meIndex = people.findIndex(p => p.id === myUserId);
+            const meIndex = people.findIndex(p => p.id === 'p_me');
             if(meIndex !== -1) { people[meIndex].name = newName; } 
             else { people[0].name = newName; }
             
             updateSidebarNameDisplay();
             renderFriends();
-            saveToLocal(); // เซฟและส่งขึ้น Firebase ด้วย
+            saveToLocal(); // <--- เพิ่มบรรทัดนี้
             closeModalUI('edit-name-modal');
             showAlert("เปลี่ยนชื่อเรียบร้อยแล้วค่ะ!", "สำเร็จ");
         }
@@ -706,13 +544,7 @@
             const input = document.getElementById('save-group-name'); const groupName = input.value.trim();
             if(!groupName) { showAlert("กรุณาพิมพ์ชื่อกลุ่มก่อนบันทึกค่ะ"); return; }
             let savedGroups = JSON.parse(localStorage.getItem('kaiten_groups') || '{}');
-            
-            // เพิ่มการเซฟ roomId เข้าไปด้วย
-            savedGroups[groupName] = {
-                roomId: roomId,
-                people: people.map(p => ({ id: p.id, name: p.name }))
-            };
-            
+            savedGroups[groupName] = people.map(p => ({ id: p.id, name: p.name }));
             localStorage.setItem('kaiten_groups', JSON.stringify(savedGroups));
             input.value = ''; renderSavedGroups(); showAlert(`บันทึกกลุ่ม "${groupName}" เรียบร้อยแล้ว!`, "สำเร็จ");
         }
@@ -723,36 +555,17 @@
             list.innerHTML = ''; const groupNames = Object.keys(savedGroups);
             if(groupNames.length === 0) { list.innerHTML = '<p style="color:#888; text-align:center;">ไม่มีกลุ่มที่บันทึกไว้</p>'; return; }
             groupNames.forEach(name => {
-                const groupData = savedGroups[name];
-                // รองรับข้อมูลแบบเก่า (ที่มีแค่รายชื่อ) และแบบใหม่ (ที่มีรหัสห้องด้วย)
-                const peopleList = Array.isArray(groupData) ? groupData : groupData.people;
-                const rId = (groupData && groupData.roomId) ? groupData.roomId : 'ไม่มีรหัส';
-                const peopleNames = peopleList.map(p => p.name).join(', ');
-                
-                list.innerHTML += `<div class="group-item"><div class="group-info"><h4>${name} <span style="font-size:11px; color:#aaa; font-weight:normal;">(รหัส: ${rId})</span></h4><p>${peopleNames}</p></div><div class="group-actions"><button class="load-group-btn" onclick="loadGroup('${name}')">เรียกใช้</button><button class="del-group-btn" onclick="deleteGroup('${name}')">ลบ</button></div></div>`;
+                const peopleNames = savedGroups[name].map(p => p.name).join(', ');
+                list.innerHTML += `<div class="group-item"><div class="group-info"><h4>${name}</h4><p>${peopleNames}</p></div><div class="group-actions"><button class="load-group-btn" onclick="loadGroup('${name}')">เรียกใช้</button><button class="del-group-btn" onclick="deleteGroup('${name}')">ลบ</button></div></div>`;
             });
         }
 
         function loadGroup(name) {
             showConfirm(`เรียกใช้กลุ่ม "${name}" ใช่ไหม?\nจานที่กำลังนับอยู่จะถูกล้างใหม่ทั้งหมด!`, () => {
                 let savedGroups = JSON.parse(localStorage.getItem('kaiten_groups') || '{}');
-                const groupData = savedGroups[name];
-                
-                people = Array.isArray(groupData) ? groupData : groupData.people;
-                currentPerson = people[0].id;
-                
-                // ถ้าระบบจำรหัสห้องไว้ได้ ให้โหลดกลับมาด้วย
-                if (groupData.roomId) {
-                    roomId = groupData.roomId;
-                    localStorage.setItem('kaiten_room_id', roomId);
-                }
-                
-                counts = { katsu: {}, sushiro: {} }; 
-                people.forEach(p => initPersonData(p.id));
-                
-                saveToLocal(); // สั่งรีเซ็ตจานเป็น 0 ทุกคนบน Firebase ด้วย
-                startFirebaseListener(); // เริ่มเชื่อมต่อห้องเก่า
-                
+                people = savedGroups[name]; currentPerson = people[0].id;
+                counts = { katsu: {}, sushiro: {} }; people.forEach(p => initPersonData(p.id));
+                saveToLocal(); // <--- เพิ่มบรรทัดนี้
                 renderFriends(); renderGrid(); toggleSidebar();
             });
         }
@@ -891,20 +704,15 @@
         switchTab(currentShop);
         updateSidebarNameDisplay();
         
-        if (!savedUsername || !roomId) {
-            // ✨ เพิ่มความฉลาด: ถ้ามีชื่อเดิมอยู่แล้ว ให้เอามาใส่รอไว้เลย จะได้ไม่ต้องพิมพ์ใหม่!
-            if (savedUsername) {
-                document.getElementById('my-name-input').value = savedUsername;
-            }
+        if (!savedUsername) {
             openModalUI('welcome-modal');
-        } else {
-            startFirebaseListener(); 
         }
 
-        document.getElementById('my-name-input').addEventListener('keypress', function(e) { if(e.key === 'Enter') createNewRoom(); });
-        document.getElementById('room-id-input').addEventListener('keypress', function(e) { if(e.key === 'Enter') joinRoom(); });
+        document.getElementById('new-friend-name').addEventListener('keypress', function(e) { if(e.key === 'Enter') addFriend(); });
+        document.getElementById('my-name-input').addEventListener('keypress', function(e) { if(e.key === 'Enter') saveMyName(); });
+        document.getElementById('edit-name-input').addEventListener('keypress', function(e) { if(e.key === 'Enter') saveEditedName(); });
+    
 
-        
         function factoryReset() {
             showConfirm("ต้องการล้างประวัติทั้งหมด (รวมถึงชื่อของคุณและกลุ่มเพื่อน) เพื่อกลับไปเหมือนเพิ่งเปิดแอปครั้งแรกใช่หรือไม่?", () => {
                 // ล้างข้อมูลแอป Kaiten ในเครื่องทั้งหมด
@@ -914,8 +722,6 @@
                 localStorage.removeItem('kaiten_current_person'); // <--- ลบคนที่กำลังเลือกค้างไว้
                 localStorage.removeItem('kaiten_counts');         // <--- ลบจำนวนจานทั้งหมด
                 localStorage.removeItem('kaiten_active_shop');    // <--- ลบแท็บร้านที่เปิดค้างไว้
-                localStorage.removeItem('kaiten_room_id');
-                localStorage.removeItem('kaiten_my_user_id');
                 
                 // รีเฟรชหน้าเว็บใหม่
                 window.location.reload();
@@ -994,15 +800,6 @@
                     counter.innerText = "0";
                 });
             }, "ล้างข้อมูลจาน");
-        }
-
-        function leaveRoom() {
-            showConfirm("ต้องการออกจากโต๊ะนี้ เพื่อไปสร้างหรือเข้าร่วมโต๊ะอื่นใช่ไหม?\n(ชื่อของคุณและกลุ่มที่เซฟไว้จะยังอยู่ครบ)", () => {
-                // ล้างทิ้งแค่ "รหัสโต๊ะ"
-                localStorage.removeItem('kaiten_room_id');
-                // รีเฟรชหน้าจอ เพื่อให้แอปเด้งกลับไปหน้าต้อนรับ
-                window.location.reload();
-            }, "ออกจากโต๊ะ");
         }
 
         
