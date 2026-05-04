@@ -640,16 +640,12 @@
             localStorage.setItem('kaiten_active_shop', currentShop);
             localStorage.setItem('kaiten_people', JSON.stringify(people)); 
             localStorage.setItem('kaiten_current_person', currentPerson);
-            
-            // Note: Firebase syncing is now handled surgically in addPlate/removePlate 
-            // and via syncRoomStructure for structural changes.
-        }
 
-        function syncRoomStructure() {
+            // ✨ เพิ่มส่วนนี้: ถ้ามีรหัสห้อง ให้ส่งข้อมูลขึ้น Firebase
             if (typeof db !== 'undefined' && roomId) {
-                db.ref('rooms/' + roomId).update({
-                    people: people,
-                    counts: counts
+                db.ref('rooms/' + roomId).set({
+                    counts: counts,
+                    people: people
                 });
             }
         }
@@ -693,7 +689,6 @@
             updateSidebarNameDisplay();
             renderFriends();
             saveToLocal();
-            syncRoomStructure();
             
             closeModalUI('welcome-modal');
         }
@@ -716,8 +711,7 @@
             
             updateSidebarNameDisplay();
             renderFriends();
-            saveToLocal(); 
-            syncRoomStructure();
+            saveToLocal(); // <--- เพิ่มบรรทัดนี้
             closeModalUI('edit-name-modal');
             showAlert("เปลี่ยนชื่อเรียบร้อยแล้วค่ะ!", "สำเร็จ");
         }
@@ -733,8 +727,7 @@
             initPersonData(newId); 
             input.value = ''; 
             selectPerson(newId); 
-            saveToLocal(); 
-            syncRoomStructure();
+            saveToLocal(); // <--- เซฟตอนเพิ่มเพื่อน
         }
 
         function removeFriend(id, name, event) {
@@ -743,8 +736,7 @@
             showConfirm(`ต้องการลบ "${name}" ออกจากกลุ่มใช่หรือไม่?`, () => {
                 people = people.filter(p => p.id !== id);
                 if(currentPerson === id) currentPerson = people[0].id; 
-                saveToLocal(); 
-                syncRoomStructure();
+                saveToLocal(); // <--- เซฟตอนลบเพื่อน
                 renderFriends(); 
                 renderGrid();
             });
@@ -781,7 +773,7 @@
                         </button>
                     </div>`;
             });
-            // Removed container.scrollLeft = 0; to prevent scroll jumping on updates
+            container.scrollLeft = 0; 
         }
 
         // --- ระบบ Sidebar ---
@@ -884,40 +876,10 @@
                 counts = { katsu: {}, sushiro: {} }; 
                 people.forEach(p => initPersonData(p.id));
                 saveToLocal();
-                syncRoomStructure();
                 renderFriends(); renderGrid(); toggleSidebar();
             });
         }
-        function deleteGroup(name) { 
-            showConfirm(`ลบกลุ่ม "${name}" ทิ้งใช่ไหม?`, () => { 
-                let savedGroups = JSON.parse(localStorage.getItem('kaiten_groups') || '{}'); 
-                const groupData = savedGroups[name];
-                const targetRoomId = groupData ? groupData.roomId : null; // ดึงรหัสห้องของกลุ่มที่จะลบ
-
-                // 1. ลบจากในเครื่องเรา
-                delete savedGroups[name]; 
-                localStorage.setItem('kaiten_groups', JSON.stringify(savedGroups)); 
-                renderSavedGroups(); 
-
-                // 2. 🚀 จัดการทำความสะอาด Firebase
-                if (targetRoomId && typeof db !== 'undefined') {
-                    const roomRef = db.ref('rooms/' + targetRoomId);
-                    roomRef.once('value').then((snapshot) => {
-                        const data = snapshot.val();
-                        if (data) {
-                            // ปลดล็อคป้ายห้ามลบ
-                            roomRef.child('isSaved').remove();
-
-                            // ถ้าไม่มีคนเหลืออยู่ในห้องนี้แล้ว ให้ลบทิ้งทันทีเพื่อคืนพื้นที่รหัส!
-                            if (!data.people || data.people.length === 0) {
-                                roomRef.remove();
-                                console.log(`ลบห้องขยะ ${targetRoomId} ทันทีเพราะไม่มีคนอยู่`);
-                            }
-                        }
-                    });
-                }
-            }); 
-        }
+        function deleteGroup(name) { showConfirm(`ลบกลุ่ม "${name}" ทิ้งใช่ไหม?`, () => { let savedGroups = JSON.parse(localStorage.getItem('kaiten_groups') || '{}'); delete savedGroups[name]; localStorage.setItem('kaiten_groups', JSON.stringify(savedGroups)); renderSavedGroups(); }); }
 
         // --- ระบบวาดจาน ---
         function switchTab(shop) {
@@ -947,16 +909,14 @@
             
             if (navigator.vibrate) navigator.vibrate(40); 
             
+            // เล่นเสียง
             if (isSoundEnabled) {
                 const sound = document.getElementById('click-sound');
                 if (sound) { sound.currentTime = 0; sound.play().catch(err => {}); }
             }
 
-            saveToLocal();
-            // 🚀 Surgical sync: Only update this specific plate count in Firebase
-            if (typeof db !== 'undefined' && roomId) {
-                db.ref('rooms/' + roomId + '/counts/' + currentShop + '/' + currentPerson + '/' + id).set(counts[currentShop][currentPerson][id]);
-            }
+            // 🚀 สำคัญ: เซฟและส่งขึ้น Firebase ทันที
+            saveToLocal(); 
         }
 
         function removePlate(id) { 
@@ -971,11 +931,8 @@
                     if (sound) { sound.currentTime = 0; sound.play().catch(err => {}); }
                 }
 
-                saveToLocal();
-                // 🚀 Surgical sync: Only update this specific plate count in Firebase
-                if (typeof db !== 'undefined' && roomId) {
-                    db.ref('rooms/' + roomId + '/counts/' + currentShop + '/' + currentPerson + '/' + id).set(counts[currentShop][currentPerson][id]);
-                }
+                // 🚀 สำคัญ: เซฟและส่งขึ้น Firebase ทันที
+                saveToLocal(); 
             } 
         }
 
@@ -1121,7 +1078,41 @@
 
         
 
-        // Security listeners
+        function addPlate(id) { 
+            counts[currentShop][currentPerson][id] += 1; 
+            document.getElementById('count-' + id).innerText = counts[currentShop][currentPerson][id]; 
+            
+            if (navigator.vibrate) navigator.vibrate(40); 
+            
+            if (isSoundEnabled) {
+                const sound = document.getElementById('click-sound');
+                if (sound) {
+                    sound.currentTime = 0;
+                    sound.play().catch(err => {});
+                }
+            }
+            saveToLocal(); // <--- เพิ่มบรรทัดนี้
+        }
+
+        function removePlate(id) { 
+            if (counts[currentShop][currentPerson][id] > 0) { 
+                counts[currentShop][currentPerson][id] -= 1; 
+                document.getElementById('count-' + id).innerText = counts[currentShop][currentPerson][id]; 
+                
+                if (navigator.vibrate) navigator.vibrate(20); 
+                
+                if (isSoundEnabled) {
+                    const sound = document.getElementById('click-sound');
+                    if (sound) {
+                        sound.currentTime = 0;
+                        sound.play().catch(err => {});
+                    }
+                }
+                saveToLocal(); // <--- เพิ่มบรรทัดนี้
+            } 
+        }
+
+        // บล็อกการคลิกขวา (Right Click)
         document.addEventListener('contextmenu', event => event.preventDefault());
 
         // บล็อกปุ่ม F12 และคีย์ลัด Inspect ต่างๆ
@@ -1152,7 +1143,6 @@
                     }
                 }
                 saveToLocal(); 
-                syncRoomStructure();
                 const allCounters = document.querySelectorAll('[id^="count-"]');
                 allCounters.forEach(counter => {
                     counter.innerText = "0";
@@ -1266,27 +1256,20 @@
             const input = document.getElementById('join-room-input').value.trim();
             if(input.length < 4) { showAlert("กรุณากรอกรหัส 4 หลักให้ถูกต้องค่ะ"); return; }
 
-            // 🚀 Verify room existence before joining
-            db.ref('rooms/' + input).once('value', (snapshot) => {
-                if (!snapshot.exists()) {
-                    showAlert("ไม่พบรหัสห้องนี้ค่ะ กรุณาตรวจสอบรหัสอีกครั้งนะ", "ไม่พบห้อง");
-                    return;
-                }
+            if (currentRoomRef) {
+                currentRoomRef.off();
+                currentRoomRef = null;
+            }
 
-                if (currentRoomRef) {
-                    currentRoomRef.off();
-                    currentRoomRef = null;
-                }
+            roomId = input;
+            localStorage.setItem('kaiten_room_id', roomId);
+            counts = { katsu: {}, sushiro: {} };
+            
+            startFirebaseListener();
+            updateRoomUI();
 
-                roomId = input;
-                localStorage.setItem('kaiten_room_id', roomId);
-                counts = { katsu: {}, sushiro: {} };
-                
-                startFirebaseListener();
-                updateRoomUI();
-
-                closeModalUI('join-room-modal');
-            });
+            // ปิดหน้าต่างอย่างเดียวจบ ให้แอนิเมชันของ iOS จัดการตัวเอง
+            closeModalUI('join-room-modal');
         }
 
         function leaveRoom() {
@@ -1304,13 +1287,18 @@
                         if (data && data.people) {
                             const updatedPeople = data.people.filter(p => p && p.id !== myUserId);
                             
+                            // 🚀 ระบบรีไซเคิลห้อง
                             if (updatedPeople.length === 0) {
+                                // ถ้าไม่มีใครเหลือในห้องเลย
                                 if (data.isSaved) {
+                                    // ถ้ามีคนเคยกด "บันทึกกลุ่ม" ไว้ -> แค่ล้างชื่อคนออก แต่เก็บห้องไว้ (กันเหนียว)
                                     roomRef.child('people').set([]);
                                 } else {
+                                    // ถ้าไม่มีใครเคยเซฟไว้ -> ลบห้องนี้ทิ้งจาก Firebase ทันที เพื่อคืนรหัสเข้าสู่ระบบ!
                                     roomRef.remove();
                                 }
                             } else {
+                                // ถ้ายังมีเพื่อนเหลืออยู่ -> อัปเดตรายชื่อตามปกติ (เอาแค่ชื่อเราออก)
                                 roomRef.child('people').set(updatedPeople);
                             }
                         }
@@ -1320,12 +1308,12 @@
                 roomId = null;
                 localStorage.removeItem('kaiten_room_id');
                 
-                const myName = localStorage.getItem('kaiten_username') || "ฉัน";
-                people = [{ id: myUserId, name: myName }];
-                currentPerson = myUserId;
+                const me = people.find(p => p.id === myUserId) || people[0];
+                people = [me];
+                currentPerson = me.id;
                 
                 counts = { katsu: {}, sushiro: {} };
-                initPersonData(myUserId);
+                initPersonData(me.id);
                 
                 saveToLocal();
                 renderFriends();
