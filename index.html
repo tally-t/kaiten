@@ -320,7 +320,7 @@
         </button>
         
         <button class="floating-btn" id="btn-checkout" onclick="showBill()" style="position: relative; bottom: auto; left: auto; right: auto; flex: 1; margin: 0;">
-            🧾 สรุปบิลและเซฟรูป
+            🧾 สรุปบิล
         </button>
         
     </div>
@@ -410,6 +410,10 @@
             <h2 style="margin-top: 0; color: var(--brand-color);">✏️ เปลี่ยนชื่อของคุณ</h2>
             <p style="color: #666; margin-bottom: 20px; line-height: 1.4; font-size: 14px;">ชื่อนี้จะแสดงเป็นชื่อของคุณเวลากดเพิ่มจานและสรุปบิลค่ะ</p>
             <input type="text" id="edit-name-input" class="welcome-input" placeholder="พิมพ์ชื่อใหม่ (เช่น ไอติม)">
+            
+            <p style="color: #666; font-size: 13px; margin-bottom: 10px;">💸 เบอร์พร้อมเพย์ (สำหรับเพื่อนโอนคืน)</p>
+            <input type="tel" id="edit-pp-input" class="welcome-input" placeholder="08X-XXX-XXXX (ไม่บังคับ)" style="margin-bottom: 20px; font-size: 14px;">
+
             <div class="confirm-actions" style="margin-top: 0;">
                 <button class="btn-cancel" onclick="closeModalUI('edit-name-modal')">ยกเลิก</button>
                 <button class="btn-confirm" onclick="saveEditedName()">บันทึก</button>
@@ -432,13 +436,18 @@
     <div class="modal" id="welcome-modal" style="z-index: 4000;">
         <div class="modal-content" style="max-width: 320px; text-align: center;">
             <h2 style="margin-top: 0; color: var(--brand-color);">👋 ยินดีต้อนรับ!</h2>
-            <p style="color: #666; margin-bottom: 20px; line-height: 1.4;">แอปนี้จะช่วยคุณคำนวณและหารค่าซูชิสายพาน ก่อนเริ่มใช้งาน ขอทราบชื่อของคุณหน่อยค่ะ</p>
+            <p style="color: #666; margin-bottom: 20px; line-height: 1.4;">แอปนี้จะช่วยคุณคำนวณและหารค่าซูชิสายพาน ก่อนเริ่มใช้งาน ขอทราบข้อมูลหน่อยค่ะ</p>
             <input type="text" id="my-name-input" class="welcome-input" placeholder="พิมพ์ชื่อของคุณ (เช่น ไอติม)">
+            
+            <p style="color: #666; font-size: 13px; margin-bottom: 10px;">💸 เบอร์พร้อมเพย์ (สำหรับเพื่อนโอนคืน)</p>
+            <input type="tel" id="my-pp-input" class="welcome-input" placeholder="08X-XXX-XXXX (ไม่บังคับ)" style="margin-bottom: 20px; font-size: 14px;">
+
+            <p style="font-size: 11px; color: #999; margin-bottom: 15px;">💡 ทิป: ใส่เบอร์พร้อมเพย์ไว้ เพื่อให้แอปเสก QR Code อัตโนมัติ!</p>
             <button class="btn-ok" onclick="saveMyName()" style="margin-top: 0;">เริ่มใช้งานเลย 🚀</button>
         </div>
     </div>
 
-    <div class="modal" id="bill-modal">
+    <div class="modal" id="bill-modal" style="z-index: 4000;">
         <div class="modal-content">
             <div class="payer-selection">
                 <label>ใครเป็นคนจ่ายเงินบิลนี้ไปก่อน?</label>
@@ -448,6 +457,12 @@
             <div id="receipt-capture-area" class="receipt-box">
                 <div class="receipt-header">
                     <div class="receipt-shop" id="receipt-shop-name">Katsu Midori</div>
+                    
+                    <div id="main-receipt-qr" style="display: none; margin-bottom: 15px;">
+                        <img id="main-qr-img" src="" crossorigin="anonymous" style="width: 130px; height: 130px; border: 1px solid #eee; border-radius: 12px; padding: 5px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                        <div style="font-size: 11px; color: #888; margin-top: 5px;">สแกนโอนเงินคืนให้คนจ่ายที่นี่ 👆</div>
+                    </div>
+
                     <div class="transfer-badge">
                         🏦 โอนเงินคืนให้: <span class="transfer-name" id="receipt-payer-name">-</span>
                     </div>
@@ -466,9 +481,47 @@
 
             <div class="action-buttons">
                 <button class="close-btn" onclick="closeBill()">ปิด</button>
-                <button class="btn-save" id="btn-save-img" onclick="saveAsImage()">📸 เซฟรูปบิล</button>
+                <button class="btn-save" id="btn-save-img" onclick="saveAsImage()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    บันทึกรายการ
+                </button>
             </div>
+
+            <button id="btn-notify-friends" onclick="notifyFriendsCheckout()" style="display: none; width: 100%; background: #22c55e; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);">
+                🔔 แจ้งยอดโอนเข้าเครื่องเพื่อน
+            </button>
+
             <button class="reset-btn" onclick="promptReset()">ล้างจำนวนจานเป็น 0 เริ่มใหม่</button>
+        </div>
+    </div>
+
+    <div class="modal" id="checkout-alert-modal" style="z-index: 6000;">
+        <div class="modal-content" style="max-width: 320px; text-align: center; padding: 0; overflow: hidden;">
+            
+            <div id="checkout-capture-area" style="background: white; padding: 20px;">
+                <div style="background: #e60012; color: white; padding: 15px; border-radius: 12px; margin: -20px -20px 15px -20px;">
+                    <h2 style="margin: 0; font-size: 20px;">🍣 ยอดค่าซูชิของคุณ</h2>
+                </div>
+                <p style="color: #666; font-size: 14px; margin-bottom: 5px;">กรุณาโอนคืนให้เพื่อนตามยอดนี้ค่ะ</p>
+                <h1 id="checkout-my-total" style="color: var(--brand-color); font-size: 36px; margin: 0 0 10px 0;">0.00 ฿</h1>
+                <p style="color: #333; font-weight: bold; margin-bottom: 15px;">โอนเงินให้: <span id="checkout-payer-name" style="color: #15803d; text-decoration: underline;">-</span></p>
+
+                <div id="checkout-qr-box" style="margin-bottom: 5px;">
+                    <img id="checkout-qr-img" src="" style="width: 160px; height: 160px; border: 1px solid #eee; border-radius: 12px; padding: 5px; background: white; display: block; margin: 0 auto;">
+                    <p style="font-size: 11px; color: #888; margin-top: 8px;">* สแกนด้วยแอปธนาคาร ยอดเงินจะเด้งขึ้นมาทันที</p>
+                </div>
+                <div style="font-size: 10px; color: #ccc; margin-top: 10px; border-top: 1px solid #f0f0f0; padding-top: 5px;">Generated by Kaiten Tally</div>
+            </div>
+
+            <div style="padding: 0 20px 20px 20px; display: flex; flex-direction: column; gap: 8px;">
+                <button class="btn-save" id="btn-save-checkout" onclick="savePersonalCheckoutAsImage()" style="width: 100%; margin: 0; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    บันทึก QR Code
+                </button>
+                <button class="close-btn" onclick="closeModalUI('checkout-alert-modal')" style="width: 100%; padding: 12px; font-size: 14px;">
+                    ปิดหน้าต่าง
+                </button>
+            </div>
         </div>
     </div>
 
@@ -665,53 +718,54 @@
         function saveMyName() {
             const inputElement = document.getElementById('my-name-input');
             const inputName = inputElement.value.trim();
+            const inputPP = document.getElementById('my-pp-input').value.trim(); // 🚀 รับค่าพร้อมเพย์
 
             if(inputName === '') { showAlert("กรุณาพิมพ์ชื่อของคุณก่อนนะคะ", "ลืมใส่ชื่อ!"); return; }
 
-            // 1. สั่งปิดคีย์บอร์ดทันที
             inputElement.blur();
-            
-            // 2. 🚀 ท่าไม้ตายปราบ iOS Safari: กระชากหน้าจอกลับมาให้ปกติก่อนทำอย่างอื่น
-            window.scrollTo(0, 0);
-            document.body.scrollTop = 0;
+            window.scrollTo(0, 0); document.body.scrollTop = 0;
 
-            // 3. เซฟข้อมูลตามปกติ
             localStorage.setItem('kaiten_username', inputName);
+            localStorage.setItem('kaiten_promptpay', inputPP);
             
             const me = people.find(p => p.id === myUserId);
-            if (me) {
-                me.name = inputName;
-            } else {
+            if (me) { 
+                me.name = inputName; 
+                me.promptpay = inputPP; 
+            } else { 
                 people[0].name = inputName; 
-                people[0].id = myUserId;
+                people[0].id = myUserId; 
+                people[0].promptpay = inputPP; 
             }
 
-            updateSidebarNameDisplay();
-            renderFriends();
-            saveToLocal();
-            
+            updateSidebarNameDisplay(); renderFriends(); saveToLocal();
             closeModalUI('welcome-modal');
         }
 
         function openEditNameModal() {
-            const currentName = localStorage.getItem('kaiten_username') || '';
-            document.getElementById('edit-name-input').value = currentName;
+            document.getElementById('edit-name-input').value = localStorage.getItem('kaiten_username') || '';
+            document.getElementById('edit-pp-input').value = localStorage.getItem('kaiten_promptpay') || ''; // 🚀 โหลดค่าพร้อมเพย์
             openModalUI('edit-name-modal');
         }
 
         function saveEditedName() {
             const newName = document.getElementById('edit-name-input').value.trim();
+            const newPP = document.getElementById('edit-pp-input').value.trim(); // 🚀 รับค่าพร้อมเพย์
             if(!newName) { showAlert("กรุณาพิมพ์ชื่อก่อนบันทึกค่ะ"); return; }
             
             localStorage.setItem('kaiten_username', newName);
+            localStorage.setItem('kaiten_promptpay', newPP);
             
-            const meIndex = people.findIndex(p => p.id === 'p_me');
-            if(meIndex !== -1) { people[meIndex].name = newName; } 
-            else { people[0].name = newName; }
+            const meIndex = people.findIndex(p => p.id === myUserId || p.id === 'p_me');
+            if(meIndex !== -1) { 
+                people[meIndex].name = newName; 
+                people[meIndex].promptpay = newPP; 
+            } else { 
+                people[0].name = newName; 
+                people[0].promptpay = newPP; 
+            }
             
-            updateSidebarNameDisplay();
-            renderFriends();
-            saveToLocal(); // <--- เพิ่มบรรทัดนี้
+            updateSidebarNameDisplay(); renderFriends(); saveToLocal(); 
             closeModalUI('edit-name-modal');
             showAlert("เปลี่ยนชื่อเรียบร้อยแล้วค่ะ!", "สำเร็จ");
         }
@@ -937,9 +991,10 @@
         }
 
         // --- ระบบบิล & เซฟรูป ---
+        let localLastCheckout = 0; // 🚀 ตัวแปรกัน Pop-up เด้งซ้ำ
+
         function showBill() {
             let tableGrandTotal = 0; let detailsHTML = ''; const activeData = currentShop === 'katsu' ? katsuData : sushiroData;
-
             const select = document.getElementById('payer-select');
             select.innerHTML = '';
             people.forEach(p => { select.innerHTML += `<option value="${p.id}">${p.name}</option>`; });
@@ -964,12 +1019,89 @@
             });
 
             if (detailsHTML === '') detailsHTML = '<p style="text-align: center; color: #888; margin-top: 20px;">ยังไม่ได้เพิ่มจานของใครเลยค่ะ</p>';
-            
             document.getElementById('bill-details').innerHTML = detailsHTML;
             document.getElementById('grand-total').innerText = tableGrandTotal.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
             
+            // 🚀 ซ่อน/แสดง ปุ่มแจ้งเตือนเพื่อน (เฉพาะตอนออนไลน์)
+            document.getElementById('btn-notify-friends').style.display = roomId ? 'block' : 'none';
+            
             updatePayerName();
             openModalUI('bill-modal');
+        }
+
+        function updatePayerName() {
+            const select = document.getElementById('payer-select');
+            if(select.options.length > 0) {
+                const payerId = select.value;
+                const payer = people.find(p => p.id === payerId);
+                
+                document.getElementById('receipt-payer-name').innerText = payer.name;
+                
+                // 🚀 ระบบเสก QR Code (Offline: โชว์ที่หัวบิล)
+                const qrContainer = document.getElementById('main-receipt-qr');
+                const qrImg = document.getElementById('main-qr-img');
+
+                if (payer.promptpay && payer.promptpay.trim() !== '') {
+                    const ppClean = payer.promptpay.replace(/[^0-9]/g, '');
+                    qrImg.src = `https://promptpay.io/${ppClean}.png`;
+                    qrContainer.style.display = 'block';
+                } else {
+                    qrContainer.style.display = 'none';
+                }
+            }
+        }
+
+        // --- 🚀 ฟังก์ชันส่งสัญญาณเช็คบิลหาทุกคน (Online) ---
+        function notifyFriendsCheckout() {
+            if (!roomId || typeof db === 'undefined') return;
+            const select = document.getElementById('payer-select');
+            const payerId = select.value;
+            
+            showConfirm("ระบบจะส่ง Pop-up แจ้งยอดโอนและ QR Code ไปยังมือถือเพื่อนทุกคนในโต๊ะ แน่ใจหรือไม่?", () => {
+                db.ref('rooms/' + roomId + '/checkout').set({
+                    active: true,
+                    payerId: payerId,
+                    timestamp: Date.now()
+                });
+                showAlert("ส่งการแจ้งเตือนไปยังหน้าจอเพื่อนทุกคนเรียบร้อยแล้วค่ะ! 🚀", "แจ้งเตือนสำเร็จ");
+            });
+        }
+
+        // --- 🚀 ฟังก์ชันรับสัญญาณเด้งเตือน (ลูกหนี้) ---
+        function showPersonalCheckoutAlert(payerId) {
+            if (payerId === myUserId || !localStorage.getItem('kaiten_username')) return; 
+
+            const payer = people.find(p => p.id === payerId);
+            if (!payer) return;
+
+            let myFoodTotal = 0;
+            const activeData = currentShop === 'katsu' ? katsuData : sushiroData;
+            
+            activeData.forEach(plate => {
+                let qty = counts[currentShop][myUserId][plate.id] || 0;
+                if (qty > 0) { myFoodTotal += qty * plate.price; }
+            });
+
+            if (myFoodTotal === 0) return; // ไม่กินก็รอดตัวไป
+
+            let mySC = myFoodTotal * 0.10;
+            let myGrandTotal = myFoodTotal + mySC;
+
+            document.getElementById('checkout-my-total').innerText = myGrandTotal.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ฿';
+            document.getElementById('checkout-payer-name').innerText = payer.name;
+
+            const qrBox = document.getElementById('checkout-qr-box');
+            const qrImg = document.getElementById('checkout-qr-img');
+
+            if (payer.promptpay && payer.promptpay.trim() !== '') {
+                const ppClean = payer.promptpay.replace(/[^0-9]/g, '');
+                qrImg.src = `https://promptpay.io/${ppClean}/${myGrandTotal.toFixed(2)}.png`;
+                qrBox.style.display = 'block';
+            } else {
+                qrBox.style.display = 'none';
+            }
+
+            openModalUI('checkout-alert-modal');
         }
 
         function updatePayerName() {
@@ -1040,6 +1172,49 @@
                 btnSave.innerText = originalText;
                 btnSave.style.opacity = '1';
                 showAlert("เกิดข้อผิดพลาดในการสร้างรูปค่ะ ลองใหม่อีกครั้ง", "ผิดพลาด");
+            });
+        }
+
+        function savePersonalCheckoutAsImage() {
+            const captureArea = document.getElementById('checkout-capture-area');
+            const btnSave = document.getElementById('btn-save-checkout');
+            
+            const originalText = btnSave.innerText;
+            btnSave.innerText = 'กำลังเตรียมรูป... ⏳';
+            btnSave.style.opacity = '0.7';
+
+            // ใช้ html2canvas ถ่ายรูปพื้นที่ที่เรากำหนด
+            html2canvas(captureArea, { 
+                scale: 2, 
+                useCORS: true, 
+                backgroundColor: '#ffffff'
+            }).then(canvas => {
+                btnSave.innerText = originalText;
+                btnSave.style.opacity = '1';
+
+                canvas.toBlob(function(blob) {
+                    const fileName = `Sushi_Transfer_${new Date().getTime()}.png`;
+                    const file = new File([blob], fileName, { type: 'image/png' });
+                    
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        navigator.share({
+                            files: [file],
+                            title: 'ยอดโอนค่าซูชิ',
+                            text: 'ยอดโอนค่าซูชิของฉัน สแกนจ่ายได้เลยจ้า 🍣💸'
+                        }).catch(err => console.log("Cancel share"));
+                    } else {
+                        const link = document.createElement('a');
+                        link.download = fileName;
+                        link.href = URL.createObjectURL(blob);
+                        link.click();
+                        showAlert("เซฟรูปยอดโอนสำเร็จ!", "สำเร็จ!");
+                    }
+                }, 'image/png');
+
+            }).catch(err => {
+                btnSave.innerText = originalText;
+                btnSave.style.opacity = '1';
+                showAlert("เกิดข้อผิดพลาดในการสร้างรูปค่ะ");
             });
         }
 
@@ -1192,7 +1367,8 @@
                     const meExists = remotePeople.find(p => p.id === myUserId);
                     if (!meExists) {
                         const myName = localStorage.getItem('kaiten_username') || "ฉัน";
-                        remotePeople.push({ id: myUserId, name: myName });
+                        const myPP = localStorage.getItem('kaiten_promptpay') || ""; // 🚀 1. ดึงเบอร์พร้อมเพย์
+                        remotePeople.push({ id: myUserId, name: myName, promptpay: myPP }); // 🚀 ส่งขึ้น Firebase
                         needsSync = true;
                     }
                     
@@ -1214,7 +1390,18 @@
                     updateRoomUI();
 
                     if (needsSync) {
-                        currentRoomRef.set({ people: people, counts: counts });
+                        // 🚀 2. ใช้ .update เพื่อไม่ให้ไปลบทับข้อมูล checkout ของห้อง
+                        currentRoomRef.update({ people: people, counts: counts });
+                    }
+
+                    // 🚀 โค้ดดักจับสัญญาณ (ใส่ไว้ก่อนบรรทัด } else { saveToLocal(); } ใน startFirebaseListener)
+                    if (data.checkout && data.checkout.active) {
+                        if (data.checkout.timestamp > localLastCheckout) {
+                            localLastCheckout = data.checkout.timestamp;
+                            if (Date.now() - data.checkout.timestamp < 60000) { // ต้องเป็นบิลใหม่ใน 1 นาที
+                                showPersonalCheckoutAlert(data.checkout.payerId);
+                            }
+                        }
                     }
                 } else {
                     saveToLocal(); 
