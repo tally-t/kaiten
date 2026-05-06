@@ -21,6 +21,7 @@
     </script>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -459,7 +460,7 @@
                     <div class="receipt-shop" id="receipt-shop-name">Katsu Midori</div>
                     
                     <div id="main-receipt-qr" style="display: none; margin-bottom: 15px;">
-                        <img id="main-qr-img" src="" crossorigin="anonymous" style="width: 130px; height: 130px; border: 1px solid #eee; border-radius: 12px; padding: 5px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                        <img id="main-qr-img" src=""  style="width: 130px; height: 130px; border: 1px solid #eee; border-radius: 12px; padding: 5px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                         <div style="font-size: 11px; color: #888; margin-top: 5px;">สแกนโอนเงินคืนให้คนจ่ายที่นี่ 👆</div>
                     </div>
 
@@ -1029,6 +1030,31 @@
             openModalUI('bill-modal');
         }
 
+        // --- 🚀 สมองกลคำนวณรหัส PromptPay (Local Engine) ---
+        function generatePromptPayPayload(promptpayId, amount) {
+            let id = promptpayId.replace(/[^0-9]/g, '');
+            let targetType = id.length >= 15 ? '03' : (id.length >= 13 ? '02' : '01');
+            let target = id;
+            if (targetType === '01') target = '0066' + id.substring(1);
+            
+            let accInfo = `0016A000000677010111${targetType}${target.length.toString().padStart(2, '0')}${target}`;
+            let amountStr = '';
+            if (amount > 0) {
+                let amt = amount.toFixed(2).toString();
+                amountStr = `54${amt.length.toString().padStart(2, '0')}${amt}`;
+            }
+            let data = `00020101021${amount > 0 ? '2' : '1'}29${accInfo.length}${accInfo}5802TH5303764${amountStr}6304`;
+            
+            let crc = 0xFFFF;
+            for (let i = 0; i < data.length; i++) {
+                crc ^= data.charCodeAt(i) << 8;
+                for (let j = 0; j < 8; j++) {
+                    crc = (crc & 0x8000) ? (crc << 1) ^ 0x1021 : crc << 1;
+                }
+            }
+            return data + (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+        }
+
         function updatePayerName() {
             const select = document.getElementById('payer-select');
             if(select.options.length > 0) {
@@ -1042,8 +1068,14 @@
                 const qrImg = document.getElementById('main-qr-img');
 
                 if (payer.promptpay && payer.promptpay.trim() !== '') {
-                    const ppClean = payer.promptpay.replace(/[^0-9]/g, '');
-                    qrImg.src = `https://promptpay.io/${ppClean}.png`;
+                    // 🚀 วาด QR Code ในเครื่อง (แบบไม่ระบุยอด)
+                    const payload = generatePromptPayPayload(payer.promptpay, 0); 
+                    new QRious({
+                        element: qrImg,
+                        value: payload,
+                        size: 300,
+                        level: 'L'
+                    });
                     qrContainer.style.display = 'block';
                 } else {
                     qrContainer.style.display = 'none';
@@ -1094,8 +1126,14 @@
             const qrImg = document.getElementById('checkout-qr-img');
 
             if (payer.promptpay && payer.promptpay.trim() !== '') {
-                const ppClean = payer.promptpay.replace(/[^0-9]/g, '');
-                qrImg.src = `https://promptpay.io/${ppClean}/${myGrandTotal.toFixed(2)}.png`;
+                // 🚀 วาด QR Code ในเครื่อง (แบบระบุยอดเงินเป๊ะๆ)
+                const payload = generatePromptPayPayload(payer.promptpay, myGrandTotal);
+                new QRious({
+                    element: qrImg,
+                    value: payload,
+                    size: 300,
+                    level: 'L'
+                });
                 qrBox.style.display = 'block';
             } else {
                 qrBox.style.display = 'none';
